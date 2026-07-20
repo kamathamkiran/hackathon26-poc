@@ -1,4 +1,12 @@
 package com.db.hackathon.workflow;
 
-public class WorkflowStatus {
+public enum WorkflowStatus {
+
+    CREATED,
+
+    RUNNING,
+
+    COMPLETED,
+
+    ERROR
 }
