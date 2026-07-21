@@ -1,36 +1,31 @@
 package com.db.hackathon.controller;
 
-import com.db.hackathon.workflow.WorkflowContext;
-import com.db.hackathon.workflow.WorkflowEngine;
-import com.db.hackathon.workflow.WorkflowStatus;
-import com.db.hackathon.workflow.WorkflowStep;
+import com.db.hackathon.dto.AgreementResponse;
+import com.db.hackathon.service.WorkflowService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.UUID;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/workflow")
 @RequiredArgsConstructor
 public class WorkflowController {
 
-    private final WorkflowEngine workflowEngine;
+    private final WorkflowService workflowService;
 
-    @PostMapping("/start")
-    public WorkflowContext startWorkflow() {
+    @PostMapping(
+            value = "/process",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public AgreementResponse process(
+            @RequestParam("file") MultipartFile file) {
 
-        WorkflowContext context = new WorkflowContext();
-
-        context.setWorkflowId(UUID.randomUUID());
-
-        context.setStatus(WorkflowStatus.CREATED);
-
-        context.setCurrentStep(WorkflowStep.PARSING);
-
-        return workflowEngine.start(context);
-
+        return workflowService.process(file);
     }
 
 }

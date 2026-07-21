@@ -1,10 +1,31 @@
-spring:
-  application:
-    name: hackathon26-poc
-
 server:
   port: 8080
+
+spring:
+  application:
+    name: credit-agreement-ai
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
 
 logging:
   level:
     root: INFO
+    com.db.hackathon: DEBUG
+
+google:
+  ai:
+    appName: credit-agreement-ai
+    userId: ops-user
+    model: gemini-3.5-flash
+
+open-router:
+  ai:
+    appName: credit-agreement-ai
+    userId: ops-user
+    model: gemini-3.1-flash-lite
