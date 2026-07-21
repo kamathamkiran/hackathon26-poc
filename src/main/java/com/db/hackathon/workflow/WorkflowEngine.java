@@ -1,34 +1,26 @@
 package com.db.hackathon.workflow;
 
-import com.db.hackathon.agent.WorkflowAgent;
-import com.db.hackathon.registry.AgentRegistry;
+import com.db.hackathon.adk.AdkAgentRunner;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class WorkflowEngine {
 
-    private final AgentRegistry registry;
+    private final AdkAgentRunner runner;
 
-    public WorkflowEngine(AgentRegistry registry) {
-        this.registry = registry;
-    }
+    public WorkflowContext start(
+            WorkflowContext context){
 
-    public WorkflowContext execute(WorkflowContext context) {
+        log.info("Workflow Started {}", context.getWorkflowId());
 
         context.setStatus(WorkflowStatus.RUNNING);
 
-        while (context.getStatus() == WorkflowStatus.RUNNING) {
+        return runner.execute(context);
 
-            WorkflowAgent agent =
-                    registry.getAgent(context.getCurrentStep());
-
-            context = agent.execute(context);
-
-            if (context.getCurrentStep() == WorkflowStep.COMPLETED) {
-                context.setStatus(WorkflowStatus.COMPLETED);
-            }
-        }
-
-        return context;
     }
+
 }
