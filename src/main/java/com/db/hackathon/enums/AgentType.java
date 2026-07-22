@@ -1,10 +1,10 @@
 package com.db.hackathon.enums;
 
-public enum AdkAgentType {
-    DOCUMENT,
+public enum AgentType {
+
+    DOCUMENT_PARSER,
 
     EXTRACTION,
 
     VALIDATION
-
 }

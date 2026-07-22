@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.file.Path;
 
 @Slf4j
 @Service
@@ -21,15 +22,12 @@ public class GoogleDocumentAiProcessor {
     private final DocumentAiProperties properties;
     private final DocumentAiMapper mapper;
 
-    public DocumentAnalysis process(MultipartFile pdf) throws IOException {
+    public DocumentAnalysis process(Path pdfPath) throws IOException {
 
-        byte[] pdfBytes = pdf.getBytes();
-
-        log.debug("Processing document: name={}, size={} bytes, mimeType={}",
-                    pdf.getOriginalFilename(), pdfBytes.length, pdf.getContentType());
+        log.info("Processing document: path={}", pdfPath);
 
         RawDocument rawDocument = RawDocument.newBuilder()
-                    .setContent( ByteString.copyFrom(pdfBytes))
+                    .setContent(ByteString.readFrom(java.nio.file.Files.newInputStream(pdfPath)))
                     .setMimeType(SUPPORTED_MIME_TYPE)
                     .build();
 
@@ -46,14 +44,15 @@ public class GoogleDocumentAiProcessor {
                     .setRawDocument(rawDocument)
                     .build();
 
+        log.debug("Sending request to Document AI processor: {}", processorName);
+
         try {
             ProcessResponse response = client.processDocument(request);
 
             log.debug("Document processed successfully");
             return mapper.map(response.getDocument());
         } catch (Exception ex) {
-            log.error("Failed to process document with processor: {}, file: {}, size: {} bytes",
-                            processorName, pdf.getOriginalFilename(), pdfBytes.length, ex);
+            log.error("Failed to process document with processor: {}", processorName);
             throw ex;
         }
     }

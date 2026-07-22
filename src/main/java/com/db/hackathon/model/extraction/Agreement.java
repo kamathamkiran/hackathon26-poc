@@ -1,6 +1,6 @@
 package com.db.hackathon.model.extraction;
 
-import com.db.hackathon.enums.AgreementField;
+import com.db.hackathon.adk.agent.validation.AgreementField;
 import lombok.Data;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -40,7 +40,6 @@ public class Agreement {
             case FACILITY_TYPE -> facilityType;
             case ARRANGER -> arranger;
             case GOVERNING_LAW -> governingLaw;
-            default -> throw new IllegalArgumentException("Unknown field: " + field);
         };
     }
 }

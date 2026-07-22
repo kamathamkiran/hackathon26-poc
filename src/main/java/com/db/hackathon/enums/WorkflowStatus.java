@@ -4,20 +4,16 @@ public enum WorkflowStatus {
 
     UPLOADED,
 
-    EXTRACTING,
-
-    EXTRACTED,
-
     PARSING,
-
     PARSED,
 
-    VALIDATING,
+    EXTRACTING,
+    EXTRACTED,
 
+    VALIDATING,
     VALIDATED,
 
     COMPLETED,
 
     FAILED
-
 }

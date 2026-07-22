@@ -1,11 +1,10 @@
 package com.db.hackathon.adk.prompt;
 
 import com.db.hackathon.model.document.DocumentAnalysis;
-import com.db.hackathon.model.document.DocumentPage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import static com.db.hackathon.enums.AdkAgentType.EXTRACTION;
+import static com.db.hackathon.enums.AgentType.EXTRACTION;
 
 @Component
 @RequiredArgsConstructor

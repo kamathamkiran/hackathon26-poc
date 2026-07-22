@@ -1,9 +1,11 @@
-package com.db.hackathon.adk.agent;
+package com.db.hackathon.adk.agent.validation;
 
+import com.db.hackathon.adk.agent.WorkflowAgent;
+import com.db.hackathon.enums.AgentType;
+import com.db.hackathon.enums.WorkflowStatus;
 import com.db.hackathon.model.extraction.Agreement;
 import com.db.hackathon.model.validation.ValidationResult;
-import com.db.hackathon.util.ValidationUtil;
-import com.db.hackathon.workflow.WorkflowContext;
+import com.db.hackathon.dto.WorkflowContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -12,13 +14,28 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Slf4j
 public class ValidationAgent
-        implements WorkflowAgent<WorkflowContext, WorkflowContext> {
+        implements WorkflowAgent {
 
-    private final ValidationUtil validationUtil;
+    private final ValidationService validationUtil;
 
     @Override
-    public WorkflowContext process(
-            WorkflowContext context) {
+    public AgentType getAgentType() {
+        return AgentType.VALIDATION;
+    }
+
+    @Override
+    public WorkflowStatus getInputStatus() {
+        return WorkflowStatus.VALIDATING;
+    }
+
+    @Override
+    public WorkflowStatus getOutputStatus() {
+        return WorkflowStatus.VALIDATED;
+    }
+
+    @Override
+    public void process(
+            WorkflowContext context) throws Exception {
 
         log.info("Starting validation");
 
@@ -28,8 +45,11 @@ public class ValidationAgent
 
         log.info("Validation completed");
 
-        return context;
+    }
 
+    @Override
+    public Object getOutput(WorkflowContext context) {
+        return context.getValidationResult();
     }
 
     public ValidationResult validate(

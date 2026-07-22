@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Path;
+
 @RestController
 @RequestMapping("/workflow")
 @RequiredArgsConstructor
@@ -23,9 +25,9 @@ public class WorkflowController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public WorkflowResponse process(
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("filePath") String filePath) {
 
-        return workflowService.process(file);
+        return workflowService.process(filePath);
     }
 
 }

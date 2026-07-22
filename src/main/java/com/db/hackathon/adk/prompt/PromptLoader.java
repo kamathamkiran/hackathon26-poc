@@ -1,6 +1,6 @@
 package com.db.hackathon.adk.prompt;
 
-import com.db.hackathon.enums.AdkAgentType;
+import com.db.hackathon.enums.AgentType;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import java.io.IOException;
@@ -9,11 +9,11 @@ import java.nio.charset.StandardCharsets;
 @Component
 public class PromptLoader {
 
-    public String load(AdkAgentType agentType) {
+    public String load(AgentType agentType) {
 
         String file = switch (agentType) {
 
-            case DOCUMENT -> "document.md";
+            case DOCUMENT_PARSER -> "document.md";
 
             case EXTRACTION -> "extraction.md";
 

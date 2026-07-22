@@ -1,8 +1,7 @@
-package com.db.hackathon.adk;
+package com.db.hackathon.adk.agent.extraction;
 
 import com.db.hackathon.adk.prompt.PromptBuilder;
 import com.db.hackathon.model.extraction.Agreement;
-import com.db.hackathon.util.JsonCleaner;
 import com.google.adk.agents.RunConfig;
 import com.google.adk.artifacts.InMemoryArtifactService;
 import com.google.adk.events.Event;
@@ -28,7 +27,7 @@ public class AdkRunnerService {
 
     private final AdkConfiguration configuration;
     private final PromptBuilder promptBuilder;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     @Value("${open-router.ai.app-name}")
     private String appName;
@@ -65,7 +64,7 @@ public class AdkRunnerService {
 
         String response = execute(prompt, sessionId);
 
-        response = JsonCleaner.clean(response);
+        response = clean(response);
 
         return objectMapper.readValue(
                 response,
@@ -127,6 +126,22 @@ public class AdkRunnerService {
 
         return session.id();
 
+    }
+
+    private String clean(String response) {
+
+        response = response.trim();
+        response = response.replace("```json", "");
+        response = response.replace("```", "");
+
+        int start = response.indexOf("{");
+        int end = response.lastIndexOf("}");
+
+        if (start >= 0 && end > start) {
+            response = response.substring(start, end + 1);
+        }
+
+        return response.trim();
     }
 
 }

@@ -1,4 +1,4 @@
-package com.db.hackathon.enums;
+package com.db.hackathon.adk.agent.validation;
 
 import lombok.Getter;
 

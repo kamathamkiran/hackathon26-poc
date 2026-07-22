@@ -1,6 +1,6 @@
 package com.db.hackathon.model.validation;
 
-import com.db.hackathon.enums.ValidationCode;
+import com.db.hackathon.adk.agent.validation.ValidationCode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

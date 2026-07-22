@@ -1,29 +1,23 @@
-package com.db.hackathon.workflow;
+package com.db.hackathon.dto;
 
 import com.db.hackathon.entity.WorkflowEntity;
-import com.db.hackathon.model.extraction.Agreement;
 import com.db.hackathon.model.document.DocumentAnalysis;
+import com.db.hackathon.model.extraction.Agreement;
 import com.db.hackathon.model.validation.ValidationResult;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Builder;
-import lombok.NoArgsConstructor;
-import org.springframework.web.multipart.MultipartFile;
+import lombok.Data;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class WorkflowContext {
 
     private WorkflowEntity workflow;
 
-    private MultipartFile pdf;
+    private String filePath;
 
     private DocumentAnalysis documentAnalysis;
 
     private Agreement agreement;
 
     private ValidationResult validationResult;
-
 }

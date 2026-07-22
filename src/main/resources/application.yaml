@@ -5,7 +5,7 @@ spring:
   application:
     name: credit-agreement-ai
   datasource:
-    url: jdbc:h2:mem:testdb
+    url: jdbc:h2:mem:hackathon26
     username: sa
     password:
     driver-class-name: org.h2.Driver

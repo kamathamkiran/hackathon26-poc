@@ -1,7 +1,18 @@
 package com.db.hackathon.adk.agent;
 
-public interface WorkflowAgent<I, O> {
+import com.db.hackathon.enums.AgentType;
+import com.db.hackathon.enums.WorkflowStatus;
+import com.db.hackathon.dto.WorkflowContext;
 
-    O process(I input) throws Exception;
+public interface WorkflowAgent {
 
+    AgentType getAgentType();
+
+    WorkflowStatus getInputStatus();
+
+    WorkflowStatus getOutputStatus();
+
+    void process(WorkflowContext context) throws Exception;
+
+    Object getOutput(WorkflowContext context);
 }
