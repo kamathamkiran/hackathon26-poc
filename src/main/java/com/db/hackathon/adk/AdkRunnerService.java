@@ -61,11 +61,9 @@ public class AdkRunnerService {
 
         String sessionId = createSession();
 
-        String prompt =
-                promptBuilder.buildExtractionPrompt(documentAnalysis);
+        String prompt = promptBuilder.buildExtractionPrompt(documentAnalysis);
 
-        String response =
-                execute(prompt, sessionId);
+        String response = execute(prompt, sessionId);
 
         response = JsonCleaner.clean(response);
 
@@ -89,8 +87,7 @@ public class AdkRunnerService {
                                         .build())
                         .build();
 
-        StringBuilder answer =
-                new StringBuilder();
+        StringBuilder answer = new StringBuilder();
 
         Flowable<Event> events =
                 runner.runAsync(
@@ -103,22 +100,16 @@ public class AdkRunnerService {
 
             if (event.content().isPresent()) {
 
-                Content response =
-                        event.content().get();
+                Content response = event.content().get();
 
                 if (response.parts().isPresent()) {
 
                     response.parts().get()
-                            .forEach(part -> {
-
-                                if (part.text().isPresent()) {
-
-                                    answer.append(part.text().get());
-
-                                }
-
-                            });
-
+                        .forEach(part -> {
+                            if (part.text().isPresent()) {
+                                answer.append(part.text().get());
+                            }
+                        });
                 }
 
             }

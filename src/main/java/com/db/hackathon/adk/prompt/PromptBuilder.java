@@ -16,31 +16,9 @@ public class PromptBuilder {
     public String buildExtractionPrompt(
             DocumentAnalysis analysis) {
 
-        StringBuilder builder =
-                new StringBuilder();
-
-        builder.append(
-                promptLoader.load(EXTRACTION));
-
-        builder.append("\n\n");
-
-        for (DocumentPage page : analysis.getPages()) {
-
-            if (page.isBlankPage()) {
-                continue;
-            }
-
-            builder.append("===== PAGE ")
-                    .append(page.getPageNumber())
-                    .append(" =====\n");
-
-            builder.append(page.getText());
-
-            builder.append("\n\n");
-
-        }
-
-        return builder.toString();
+        return promptLoader.load(EXTRACTION) +
+                "\n\n" +
+                analysis.getFullText();
 
     }
 

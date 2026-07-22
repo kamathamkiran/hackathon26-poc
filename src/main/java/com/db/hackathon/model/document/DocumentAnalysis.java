@@ -14,6 +14,8 @@ public class DocumentAnalysis {
 
     private Integer totalPages;
 
+    private String fullText;
+
     private List<DocumentPage> pages;
 
 }

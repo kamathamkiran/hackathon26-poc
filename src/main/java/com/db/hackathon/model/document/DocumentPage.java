@@ -15,8 +15,6 @@ public class DocumentPage {
 
     private String text;
 
-    private Integer characterCount;
-
-    private boolean blankPage;
+    private Boolean blankPage;
 
 }
