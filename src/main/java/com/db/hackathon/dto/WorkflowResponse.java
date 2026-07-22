@@ -1,29 +1,21 @@
 package com.db.hackathon.dto;
 
-import com.db.hackathon.workflow.WorkflowContext;
-import com.db.hackathon.enums.WorkflowStatus;
+import com.db.hackathon.model.extraction.Agreement;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import com.db.hackathon.model.validation.ValidationResult;
+import com.db.hackathon.enums.WorkflowStatus;
 
-@Value
+@Data
 @Builder
 public class WorkflowResponse {
 
-    String workflowId;
+    private String workflowId;
 
-    WorkflowStatus status;
+    private WorkflowStatus status;
 
-    public static WorkflowResponse from(
-            WorkflowContext context) {
+    private Agreement agreement;
 
-        return WorkflowResponse.builder()
-
-                .workflowId(context.getWorkflow().getWorkflowId())
-
-                .status(context.getWorkflow().getStatus())
-
-                .build();
-
-    }
+    private ValidationResult validationResult;
 
 }

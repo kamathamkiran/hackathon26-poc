@@ -2,8 +2,8 @@ package com.db.hackathon.util;
 
 import com.db.hackathon.enums.AgreementField;
 import com.db.hackathon.enums.ValidationCode;
-import com.db.hackathon.model.aggrement.Agreement;
-import com.db.hackathon.model.aggrement.ExtractedField;
+import com.db.hackathon.model.extraction.Agreement;
+import com.db.hackathon.model.extraction.ExtractedField;
 import com.db.hackathon.model.validation.ValidationMessage;
 import com.db.hackathon.model.validation.ValidationResult;
 import org.springframework.stereotype.Component;

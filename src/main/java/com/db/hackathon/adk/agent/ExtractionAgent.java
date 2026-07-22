@@ -1,7 +1,7 @@
 package com.db.hackathon.adk.agent;
 
 import com.db.hackathon.adk.AdkRunnerService;
-import com.db.hackathon.model.aggrement.Agreement;
+import com.db.hackathon.model.extraction.Agreement;
 import com.db.hackathon.workflow.WorkflowContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

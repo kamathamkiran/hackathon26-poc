@@ -49,13 +49,7 @@ public class WorkflowManager {
             String remarks) {
 
         workflow.setStatus(status);
-
-        if (status == WorkflowStatus.COMPLETED
-                || status == WorkflowStatus.FAILED) {
-
-            workflow.setCompletedAt(Instant.now());
-
-        }
+        workflow.setCompletedAt(Instant.now());
 
         workflowRepository.save(workflow);
 

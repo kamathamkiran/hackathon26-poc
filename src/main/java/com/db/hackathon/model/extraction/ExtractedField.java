@@ -1,4 +1,4 @@
-package com.db.hackathon.model.aggrement;
+package com.db.hackathon.model.extraction;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

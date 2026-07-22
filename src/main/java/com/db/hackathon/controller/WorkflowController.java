@@ -1,6 +1,6 @@
 package com.db.hackathon.controller;
 
-import com.db.hackathon.dto.AgreementResponse;
+import com.db.hackathon.dto.WorkflowResponse;
 import com.db.hackathon.service.WorkflowService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -22,7 +22,7 @@ public class WorkflowController {
             value = "/process",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    public AgreementResponse process(
+    public WorkflowResponse process(
             @RequestParam("file") MultipartFile file) {
 
         return workflowService.process(file);

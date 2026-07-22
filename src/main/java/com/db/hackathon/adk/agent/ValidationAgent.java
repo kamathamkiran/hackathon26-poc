@@ -1,6 +1,6 @@
 package com.db.hackathon.adk.agent;
 
-import com.db.hackathon.model.aggrement.Agreement;
+import com.db.hackathon.model.extraction.Agreement;
 import com.db.hackathon.model.validation.ValidationResult;
 import com.db.hackathon.util.ValidationUtil;
 import com.db.hackathon.workflow.WorkflowContext;

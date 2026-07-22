@@ -1,7 +1,7 @@
 package com.db.hackathon.adk;
 
 import com.db.hackathon.adk.prompt.PromptBuilder;
-import com.db.hackathon.model.aggrement.Agreement;
+import com.db.hackathon.model.extraction.Agreement;
 import com.db.hackathon.util.JsonCleaner;
 import com.google.adk.agents.RunConfig;
 import com.google.adk.artifacts.InMemoryArtifactService;
@@ -18,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import java.util.UUID;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.db.hackathon.model.document.DocumentAnalysis;
 

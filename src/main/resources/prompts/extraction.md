@@ -23,6 +23,34 @@ Extract ONLY the following fields.
 "governingLaw": ""
 }
 
+Return ONLY valid JSON.
+
+Each field MUST be returned as an object with the following properties:
+
+{
+"value": "...",
+"pageNumber": 1,
+"confidence": 0.95,
+"sourceText": "..."
+}
+
+Example:
+
+{
+"dealName": {
+"value": "Project Titan Refinancing",
+"pageNumber": 1,
+"confidence": 0.99,
+"sourceText": "Project Titan Refinancing"
+},
+"borrower": {
+"value": "ABC Ltd",
+"pageNumber": 2,
+"confidence": 0.98,
+"sourceText": "Borrower means ABC Ltd"
+}
+}
+
 Field Guidelines
 
 1. dealName

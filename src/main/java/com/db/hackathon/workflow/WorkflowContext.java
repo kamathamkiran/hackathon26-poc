@@ -1,7 +1,7 @@
 package com.db.hackathon.workflow;
 
 import com.db.hackathon.entity.WorkflowEntity;
-import com.db.hackathon.model.aggrement.Agreement;
+import com.db.hackathon.model.extraction.Agreement;
 import com.db.hackathon.model.document.DocumentAnalysis;
 import com.db.hackathon.model.validation.ValidationResult;
 import lombok.AllArgsConstructor;

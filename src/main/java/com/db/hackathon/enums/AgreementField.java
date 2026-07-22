@@ -1,5 +1,8 @@
 package com.db.hackathon.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum AgreementField {
 
     DEAL_NAME(true),
@@ -19,7 +22,4 @@ public enum AgreementField {
         this.mandatory = mandatory;
     }
 
-    public boolean isMandatory() {
-        return mandatory;
-    }
 }
