@@ -1,5 +1,6 @@
 package com.db.hackathon.controller;
 
+import com.db.hackathon.dto.WorkflowResponse;
 import com.db.hackathon.service.WorkflowService;
 import com.db.hackathon.subscribe.PdfUploadService;
 import lombok.RequiredArgsConstructor;
@@ -23,11 +24,10 @@ public class WorkflowController {
             value = "/process",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    public void process(
+    public WorkflowResponse process(
             @RequestParam("filePath") String filePath) {
 
-        //return workflowService.process(filePath);
-        return;
+        return workflowService.process(filePath);
     }
 
     @PostMapping("/upload")

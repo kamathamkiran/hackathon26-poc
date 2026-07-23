@@ -5,8 +5,6 @@ import com.db.hackathon.entity.WorkflowEntity;
 import com.db.hackathon.enums.AgentType;
 import com.db.hackathon.enums.WorkflowStatus;
 import com.db.hackathon.repository.WorkflowRepository;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.db.hackathon.dto.WorkflowContext;
@@ -23,14 +21,17 @@ public class WorkflowService {
     private final WorkflowRepository workflowRepository;
     private final JsonSerializerService jsonSerializer;
 
-    public WorkflowResponse process(JsonNode fileMetadata) {
-        String uuid = fileMetadata.get("uuid").asText();
+    public WorkflowResponse process(String filePath) {
+
         WorkflowEntity workflow = WorkflowEntity.builder()
-                .workflowId(UUID.randomUUID().toString()) //pass uuid available in metadata
+                .workflowId(UUID.randomUUID().toString())
                 .username("OPS_USER")
                 .status(WorkflowStatus.UPLOADED)
                 .nextAgent(AgentType.DOCUMENT_PARSER)
-                .metadata(fileMetadata.toString())
+                .metadata(
+                        jsonSerializer.serialize(
+                        Map.of("filePath", filePath)
+                ))
                 .build();
 
         workflowRepository.save(workflow);

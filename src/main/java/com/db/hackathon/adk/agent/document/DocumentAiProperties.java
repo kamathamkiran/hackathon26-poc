@@ -1,4 +1,4 @@
-package com.db.hackathon.config;
+package com.db.hackathon.adk.agent.document;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

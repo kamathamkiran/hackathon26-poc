@@ -1,12 +1,12 @@
 package com.db.hackathon.adk.agent.document;
 
-import com.db.hackathon.config.DocumentAiProperties;
 import com.db.hackathon.model.document.DocumentAnalysis;
 import com.google.cloud.documentai.v1.*;
 import com.google.protobuf.ByteString;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Path;
