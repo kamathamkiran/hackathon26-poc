@@ -66,8 +66,17 @@ public class CreditAgreementVerifierAgent implements WorkflowAgent {
         }
 
         String raw = runnerService.runPrompt(buildPrompt(json, evidence));
-        CreditAgreementVerificationResult result = parseResult(raw, evidence.size());
+        log.info("Credit agreement critic checked {} field(s) {} for workflow {}",
+                evidence.size(),
+                evidence.stream().map(FieldEvidence::path).toList(),
+                context.getWorkflow().getWorkflowId());
+        log.debug("Credit agreement critic raw response for workflow {}:\n{}",
+                context.getWorkflow().getWorkflowId(), raw);
+        CreditAgreementVerificationResult result = parseResult(raw, evidence);
         context.setCreditAgreementVerificationResult(result);
+        log.info("Credit agreement verification result for workflow {}: {}",
+                context.getWorkflow().getWorkflowId(),
+                result);
 
         if (!result.isVerified()) {
             throw new WorkflowVerificationException(
@@ -88,74 +97,81 @@ public class CreditAgreementVerifierAgent implements WorkflowAgent {
         List<FieldEvidence> evidence = new ArrayList<>();
         if (document == null || document.getPages() == null) {
             evidence.add(new FieldEvidence("document", "", "", ""
-            ,"Missing page/line range for field"));
+            ,"Missing document pages for verification"));
             return evidence;
         }
-        collectLeafEvidence(deal, deal, "", document, evidence);
+        collectLeafEvidence(deal, "", document, evidence);
         return evidence;
     }
 
-    private void collectLeafEvidence(JsonNode root, JsonNode node, String path,
+    private void collectLeafEvidence(JsonNode node, String path,
                                      DocumentAnalysis document, List<FieldEvidence> evidence) {
+        if (isExtractedField(node)) {
+            addFieldEvidence(node, path, document, evidence);
+            return;
+        }
         if (node.isObject()) {
             Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
             while (fields.hasNext()) {
                 Map.Entry<String, JsonNode> field = fields.next();
-                if (path.isEmpty() && field.getKey().equals("_sourceLocations")) {
-                    continue;
-                }
                 String fieldPath = path.isEmpty() ? field.getKey() : path + "." + field.getKey();
-                collectLeafEvidence(root, field.getValue(), fieldPath, document, evidence);
+                collectLeafEvidence(field.getValue(), fieldPath, document, evidence);
             }
             return;
         }
         if (node.isArray()) {
             for (int i = 0; i < node.size(); i++) {
-                collectLeafEvidence(root, node.get(i), path + "[" + i + "]", document, evidence);
+                collectLeafEvidence(node.get(i), path + "[" + i + "]", document, evidence);
             }
-            return;
-        }
-
-        JsonNode rangeNode = root.path("_sourceLocations").get(path);
-        if (rangeNode == null || !rangeNode.isTextual()) {
-            evidence.add(new FieldEvidence(path, node.toString(), "", "",
-                    "Missing page/line range for field"));
-            return;
-        }
-
-        String range = rangeNode.asText();
-        try {
-            evidence.add(new FieldEvidence(path, node.toString(), range,
-                    excerpt(document, PageLineRange.parse(range)),"Missing page/line range for field"));
-        } catch (RuntimeException exception) {
-            evidence.add(new FieldEvidence(path, node.toString(), range, ""
-            ,"Missing page/line range for field"));
         }
     }
 
-    private String excerpt(DocumentAnalysis document, PageLineRange range) {
-        StringBuilder result = new StringBuilder();
-        for (int pageNumber = range.startPage(); pageNumber <= range.endPage(); pageNumber++) {
-            int finalPageNumber = pageNumber;
-            int finalPageNumber1 = pageNumber;
-            DocumentPage page = document.getPages().stream()
-                    .filter(candidate -> candidate.getPageNumber() != null
-                            && candidate.getPageNumber() == finalPageNumber)
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Page not found: " + finalPageNumber1));
+    /** An extracted leaf is the metadata wrapper: value, pageNumber, confidence, sourceText. */
+    private boolean isExtractedField(JsonNode node) {
+        return node != null && node.isObject()
+                && node.has("value") && node.has("pageNumber");
+    }
 
-            String[] lines = (page.getText() == null ? "" : page.getText()).split("\\R", -1);
-            int firstLine = pageNumber == range.startPage() ? range.startLine() : 1;
-            int lastLine = pageNumber == range.endPage() ? range.endLine() : lines.length;
-            if (firstLine < 1 || lastLine < firstLine || lastLine > lines.length) {
-                throw new IllegalArgumentException("Line range not found on page " + pageNumber);
-            }
-
-            for (int line = firstLine; line <= lastLine; line++) {
-                result.append("[page ").append(pageNumber).append(", line ").append(line)
-                        .append("] ").append(lines[line - 1]).append('\n');
-            }
+    private void addFieldEvidence(JsonNode field, String path,
+                                  DocumentAnalysis document, List<FieldEvidence> evidence) {
+        JsonNode valueNode = field.path("value");
+        String value = valueNode.isNull() ? "" : valueNode.asText("");
+        if (value.isBlank()) {
+            // Nothing was extracted for this field, so there is nothing to verify against the PDF.
+            return;
         }
+
+        JsonNode pageNode = field.path("pageNumber");
+        if (pageNode.isMissingNode() || pageNode.isNull() || !pageNode.canConvertToInt()) {
+            evidence.add(new FieldEvidence(path, value, "", "",
+                    "Missing page number for field"));
+            return;
+        }
+
+        int pageNumber = pageNode.asInt();
+        String sourceText = field.path("sourceText").asText("");
+        try {
+            evidence.add(new FieldEvidence(path, value, "page " + pageNumber,
+                    excerpt(document, pageNumber, sourceText), null));
+        } catch (RuntimeException exception) {
+            evidence.add(new FieldEvidence(path, value, "page " + pageNumber, sourceText,
+                    "Cited page " + pageNumber + " could not be resolved"));
+        }
+    }
+
+    private String excerpt(DocumentAnalysis document, int pageNumber, String sourceText) {
+        DocumentPage page = document.getPages().stream()
+                .filter(candidate -> candidate.getPageNumber() != null
+                        && candidate.getPageNumber() == pageNumber)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Page not found: " + pageNumber));
+
+        String pageText = page.getText() == null ? "" : page.getText();
+        StringBuilder result = new StringBuilder();
+        if (sourceText != null && !sourceText.isBlank()) {
+            result.append("[cited source text] ").append(sourceText.trim()).append('\n');
+        }
+        result.append("[page ").append(pageNumber).append("]\n").append(pageText);
         return result.toString().trim();
     }
 
@@ -164,8 +180,12 @@ public class CreditAgreementVerifierAgent implements WorkflowAgent {
                 .append("You are a strict credit-agreement critic.\n")
                 .append("Compare each JSON field only with its cited PDF excerpt.\n")
                 .append("Do not infer missing values or repair placeholders.\n")
+                .append("Check exactly the ").append(evidence.size())
+                .append(" fields listed below - no more, no less. ")
+                .append("Echo every field path you checked in 'checkedFieldPaths'.\n")
                 .append("Return JSON only in this shape: ")
                 .append("{\"decision\":\"SUCCESS|FAILURE\",\"checkedFields\":0,"
+                        + "\"checkedFieldPaths\":[\"...\"],"
                         + "\"mismatches\":[{\"fieldPath\":\"...\",\"reason\":\"...\"}]}\n\n")
                 .append("DEAL JSON:\n").append(json).append("\n\n");
 
@@ -178,7 +198,9 @@ public class CreditAgreementVerifierAgent implements WorkflowAgent {
         return prompt.toString();
     }
 
-    private CreditAgreementVerificationResult parseResult(String raw, int expectedFields) throws Exception {
+    private CreditAgreementVerificationResult parseResult(String raw, List<FieldEvidence> evidence)
+            throws Exception {
+        int expectedFields = evidence.size();
         int start = raw.indexOf('{');
         int end = raw.lastIndexOf('}');
         if (start < 0 || end <= start) {
@@ -199,12 +221,13 @@ public class CreditAgreementVerifierAgent implements WorkflowAgent {
             }
         }
         if (checkedFields != expectedFields) {
-            mismatches.add("Critic checked " + checkedFields + " fields, expected " + expectedFields);
+            mismatches.add(describeFieldCountMismatch(checkedFields, expectedFields,
+                    evidence, result.path("checkedFieldPaths")));
         }
         if (!decision.equals("SUCCESS") && !decision.equals("FAILURE")) {
-            mismatches.add("Critic returned an invalid decision: " + decision);
+            mismatches.add("Critic returned an invalid decision: '" + decision + "'");
         }
-        if (decision.equals("FAILURE") && mismatchArray.isArray() && mismatchArray.size() == 0) {
+        if (decision.equals("FAILURE") && mismatchArray.isArray() && mismatchArray.isEmpty()) {
             mismatches.add("Critic returned FAILURE without explaining a mismatch");
         }
 
@@ -213,6 +236,37 @@ public class CreditAgreementVerifierAgent implements WorkflowAgent {
                 .checkedFields(checkedFields)
                 .mismatches(mismatches)
                 .build();
+    }
+
+    /**
+     * Builds a human-readable explanation of why the critic's field count differs from the number
+     * of fields we submitted, listing the exact paths that were extra or missing.
+     */
+    private String describeFieldCountMismatch(int checkedFields, int expectedFields,
+                                              List<FieldEvidence> evidence, JsonNode checkedPathsNode) {
+        List<String> expectedPaths = evidence.stream().map(FieldEvidence::path).toList();
+        StringBuilder message = new StringBuilder("Critic checked ")
+                .append(checkedFields).append(" fields, expected ").append(expectedFields);
+
+        if (checkedPathsNode != null && checkedPathsNode.isArray()) {
+            List<String> checkedPaths = new ArrayList<>();
+            checkedPathsNode.forEach(node -> checkedPaths.add(node.asText()));
+
+            List<String> extra = new ArrayList<>(checkedPaths);
+            extra.removeAll(expectedPaths);
+            List<String> missing = new ArrayList<>(expectedPaths);
+            missing.removeAll(checkedPaths);
+
+            if (!extra.isEmpty()) {
+                message.append("; unexpected fields checked by critic: ").append(extra);
+            }
+            if (!missing.isEmpty()) {
+                message.append("; fields the critic skipped: ").append(missing);
+            }
+        } else {
+            message.append("; fields submitted for review: ").append(expectedPaths);
+        }
+        return message.toString();
     }
 
     private void setFailure(WorkflowContext context, int checkedFields, List<String> issues) {
@@ -227,30 +281,6 @@ public class CreditAgreementVerifierAgent implements WorkflowAgent {
                                   String excerpt, String issue) {
         private boolean hasIssue() {
             return issue != null && !issue.isBlank();
-        }
-    }
-
-    private record PageLineRange(int startPage, int startLine, int endPage, int endLine) {
-        private static PageLineRange parse(String value) {
-            String[] parts = value.split("[-,]");
-            if (parts.length != 4) {
-                throw new IllegalArgumentException("Invalid page/line range: " + value);
-            }
-
-            try {
-                PageLineRange range = new PageLineRange(
-                        Integer.parseInt(parts[0]), Integer.parseInt(parts[1]),
-                        Integer.parseInt(parts[2]), Integer.parseInt(parts[3]));
-                if (range.startPage() < 1 || range.startLine() < 1
-                        || range.endPage() < range.startPage()
-                        || (range.endPage() == range.startPage()
-                        && range.endLine() < range.startLine())) {
-                    throw new IllegalArgumentException("Invalid page/line range: " + value);
-                }
-                return range;
-            } catch (NumberFormatException exception) {
-                throw new IllegalArgumentException("Invalid page/line range: " + value, exception);
-            }
         }
     }
 }

@@ -3,6 +3,8 @@ package com.db.hackathon.workflow;
 import com.db.hackathon.adk.agent.document.DocumentParserAgent;
 import com.db.hackathon.adk.agent.extraction.ExtractionAgent;
 import com.db.hackathon.adk.agent.validation.ValidationAgent;
+import com.db.hackathon.adk.agent.verification.CreditAgreementVerifierAgent;
+import com.db.hackathon.adk.agent.verification.DealDataVerifierAgent;
 import com.db.hackathon.dto.WorkflowContext;
 import com.db.hackathon.entity.WorkflowEntity;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,8 @@ public class WorkflowEngine {
     private final DocumentParserAgent parserAgent;
     private final ExtractionAgent extractionAgent;
     private final ValidationAgent validationAgent;
+    private final DealDataVerifierAgent dealDataVerifierAgent;
+    private final CreditAgreementVerifierAgent creditAgreementVerifierAgent;
 
     public WorkflowContext execute(WorkflowEntity workflow) {
 
@@ -34,15 +38,30 @@ public class WorkflowEngine {
                     executor.execute(parserAgent, context);
                     executor.execute(extractionAgent, context);
                     executor.execute(validationAgent, context);
+                    executor.execute(dealDataVerifierAgent, context);
+                    executor.execute(creditAgreementVerifierAgent, context);
                 }
 
                 case PARSED -> {
                     executor.execute(extractionAgent, context);
                     executor.execute(validationAgent, context);
+                    executor.execute(dealDataVerifierAgent, context);
+                    executor.execute(creditAgreementVerifierAgent, context);
                 }
 
                 case EXTRACTED -> {
                     executor.execute(validationAgent, context);
+                    executor.execute(dealDataVerifierAgent, context);
+                    executor.execute(creditAgreementVerifierAgent, context);
+                }
+
+                case VALIDATED -> {
+                    executor.execute(dealDataVerifierAgent, context);
+                    executor.execute(creditAgreementVerifierAgent, context);
+                }
+
+                case DEAL_DATA_VERIFIED -> {
+                    executor.execute(creditAgreementVerifierAgent, context);
                 }
 
             }

@@ -41,6 +41,7 @@ public class ExtractionAgent implements WorkflowAgent {
                         context.getDocumentAnalysis());
 
         context.setDeal(deal);
+        log.info("Extracted deal data: {}", deal);
 
         log.info("Agreement extraction completed");
 

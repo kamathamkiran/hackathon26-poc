@@ -17,9 +17,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /** Deterministic gate for the JSON produced by the extraction workflow. */
@@ -28,8 +26,6 @@ import java.util.Set;
 public class DealDataVerifier {
 
     private static final String SCHEMA_RESOURCE = "schema.json";
-    private static final String SOURCE_RANGE_PATTERN =
-            "^[1-9][0-9]*,[1-9][0-9]*-[1-9][0-9]*,[1-9][0-9]*$";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -67,7 +63,6 @@ public class DealDataVerifier {
             validateDuplicates(deal, errors);
             validateDateRelationships(deal, errors);
             validateCommitmentTotals(deal, errors);
-            validateSourceLocations(deal, errors);
         } catch (Exception exception) {
             errors.add("Unable to validate extracted deal data: " + message(exception));
         }
@@ -89,63 +84,29 @@ public class DealDataVerifier {
         }
     }
 
-    private void validateSourceLocations(JsonNode deal, List<String> errors) {
-        JsonNode locations = deal.path("_sourceLocations");
-        if (!locations.isObject()) {
-            errors.add("Every deal field must have a page/line range in _sourceLocations");
-            return;
+    /**
+     * Reads the {@code value} of an {@link com.db.hackathon.model.extraction.ExtractedField}
+     * wrapper nested under {@code parent.field}. Returns {@code null} when the value is absent.
+     */
+    private String fieldValue(JsonNode parent, String field) {
+        JsonNode wrapper = parent.path(field);
+        JsonNode value = wrapper.path("value");
+        if (value.isMissingNode() || value.isNull() || !value.isValueNode()) {
+            return null;
         }
-
-        Set<String> expectedPaths = new HashSet<>();
-        collectFieldPaths(deal, "", expectedPaths);
-
-        Iterator<Map.Entry<String, JsonNode>> fields = locations.properties().iterator();
-        while (fields.hasNext()) {
-            Map.Entry<String, JsonNode> entry = fields.next();
-            String path = entry.getKey();
-            JsonNode range = entry.getValue();
-            if (!expectedPaths.contains(path)) {
-                errors.add("_sourceLocations contains a path that is not a deal field: " + path);
-            }
-            if (!range.isTextual() || !range.asText().matches(SOURCE_RANGE_PATTERN)) {
-                errors.add("Invalid page/line range for " + path + ": " + range);
-            }
-        }
-
-        for (String path : expectedPaths) {
-            if (!locations.has(path)) {
-                errors.add("Missing page/line range in _sourceLocations for " + path);
-            }
-        }
-    }
-
-    private void collectFieldPaths(JsonNode node, String path, Set<String> paths) {
-        if (node.isObject()) {
-            Iterator<Map.Entry<String, JsonNode>> fields = node.properties().iterator();
-            while (fields.hasNext()) {
-                Map.Entry<String, JsonNode> field = fields.next();
-                if (path.isEmpty() && field.getKey().equals("_sourceLocations")) {
-                    continue;
-                }
-                String fieldPath = path.isEmpty() ? field.getKey() : path + "." + field.getKey();
-                paths.add(fieldPath);
-                collectFieldPaths(field.getValue(), fieldPath, paths);
-            }
-        } else if (node.isArray()) {
-            for (int i = 0; i < node.size(); i++) {
-                String itemPath = path + "[" + i + "]";
-                paths.add(itemPath);
-                collectFieldPaths(node.get(i), itemPath, paths);
-            }
-        }
+        String text = value.asText();
+        return text.isEmpty() ? null : text;
     }
 
     private void validateDescriptionRules(JsonNode deal, List<String> errors) {
         validateAlphanumericWithSpaces(deal, "dealName", errors);
         validateAlphanumericWithSpaces(deal, "currency", errors);
         validateAlphanumericWithSpaces(deal, "department", errors);
+        validateMaxLength(deal, "dealName", 40, "deal", errors);
         validateMaxLength(deal.path("dealAdminAgent"), "customerExternalId", 15,
                 "dealAdminAgent", errors);
+        validateMaxLength(deal.path("dealBorrower"), "customerExternalId", 15,
+                "dealBorrower", errors);
 
         JsonNode facilities = deal.path("facilityList");
         for (int i = 0; i < facilities.size(); i++) {
@@ -155,18 +116,11 @@ public class DealDataVerifier {
             validateMaxLength(facility, "facilityName", 30,
                     "facilityList[" + i + "]", errors);
         }
-
-        JsonNode trades = deal.path("tradeList");
-        for (int i = 0; i < trades.size(); i++) {
-            validateMaxLength(trades.get(i), "dealInternalId", 8,
-                    "tradeList[" + i + "]", errors);
-        }
     }
 
     private void validateAlphanumericWithSpaces(JsonNode parent, String field, List<String> errors) {
-        JsonNode value = parent.get(field);
-        if (value != null && value.isTextual()
-                && !value.asText().matches("[A-Za-z0-9]+(?:[ ][A-Za-z0-9]+)*")) {
+        String value = fieldValue(parent, field);
+        if (value != null && !value.matches("[A-Za-z0-9]+(?:[ ][A-Za-z0-9]+)*")) {
             errors.add("Description rule " + field
                     + " must contain only letters, numbers, and single spaces");
         }
@@ -174,8 +128,8 @@ public class DealDataVerifier {
 
     private void validateMaxLength(JsonNode parent, String field, int max,
                                    String prefix, List<String> errors) {
-        JsonNode value = parent.get(field);
-        if (value != null && value.isTextual() && value.asText().length() > max) {
+        String value = fieldValue(parent, field);
+        if (value != null && value.length() > max) {
             errors.add("Description rule " + prefix + "." + field
                     + " exceeds maxLength " + max);
         }
@@ -184,9 +138,7 @@ public class DealDataVerifier {
     private void validateDuplicates(JsonNode deal, List<String> errors) {
         findDuplicateObjects(deal.path("interestPricingOptions"), "interestPricingOptions", errors);
         findDuplicateObjects(deal.path("facilityList"), "facilityList", errors);
-        findDuplicateObjects(deal.path("tradeList"), "tradeList", errors);
         findDuplicateValues(deal.path("facilityList"), "dealTrackingNumber", "facilityList", errors);
-        findDuplicateValues(deal.path("tradeList"), "dealInternalId", "tradeList", errors);
     }
 
     private void findDuplicateObjects(JsonNode array, String path, List<String> errors) {
@@ -201,18 +153,18 @@ public class DealDataVerifier {
     private void findDuplicateValues(JsonNode array, String field, String path, List<String> errors) {
         Set<String> seen = new HashSet<>();
         for (int i = 0; i < array.size(); i++) {
-            JsonNode value = array.get(i).get(field);
-            if (value != null && !value.isNull() && value.isTextual()
-                    && !seen.add(value.asText())) {
-                errors.add("Duplicate " + field + " '" + value.asText()
+            String value = fieldValue(array.get(i), field);
+            if (value != null && !seen.add(value)) {
+                errors.add("Duplicate " + field + " '" + value
                         + "' in " + path + " at index " + i);
             }
         }
     }
 
     private void validateDateRelationships(JsonNode deal, List<String> errors) {
-        for (int i = 0; i < deal.path("facilityList").size(); i++) {
-            JsonNode facility = deal.path("facilityList").get(i);
+        JsonNode facilities = deal.path("facilityList");
+        for (int i = 0; i < facilities.size(); i++) {
+            JsonNode facility = facilities.get(i);
             compareDates(facility, "agreementDate", "effectiveDate",
                     "facilityList[" + i + "]", errors);
             compareDates(facility, "effectiveDate", "expiryDate",
@@ -224,9 +176,14 @@ public class DealDataVerifier {
 
     private void compareDates(JsonNode object, String earlierField, String laterField,
                               String path, List<String> errors) {
+        String earlierText = fieldValue(object, earlierField);
+        String laterText = fieldValue(object, laterField);
+        if (earlierText == null || laterText == null) {
+            return;
+        }
         try {
-            LocalDate earlier = LocalDate.parse(object.path(earlierField).asText());
-            LocalDate later = LocalDate.parse(object.path(laterField).asText());
+            LocalDate earlier = LocalDate.parse(earlierText);
+            LocalDate later = LocalDate.parse(laterText);
             if (later.isBefore(earlier)) {
                 errors.add(path + " requires " + laterField
                         + " to be on or after " + earlierField);
@@ -237,7 +194,7 @@ public class DealDataVerifier {
     }
 
     private void validateCommitmentTotals(JsonNode deal, List<String> errors) {
-        BigDecimal global = decimal(deal.get("globalDealProposedCommitmentAmount"));
+        BigDecimal global = decimal(fieldValue(deal, "globalDealProposedCommitmentAmount"));
         if (global == null) {
             return;
         }
@@ -247,26 +204,12 @@ public class DealDataVerifier {
             errors.add("facilityList proposedCommitmentAmount total " + facilityTotal
                     + " does not equal globalDealProposedCommitmentAmount " + global);
         }
-
-        BigDecimal tradeTotal = BigDecimal.ZERO;
-        for (JsonNode trade : deal.path("tradeList")) {
-            BigDecimal amount = decimal(trade.path("facilityPosition")
-                    .path("portfolioAllocation").get("facilityCurrencyAmount"));
-            if (amount == null) {
-                return;
-            }
-            tradeTotal = tradeTotal.add(amount);
-        }
-        if (global.compareTo(tradeTotal) != 0) {
-            errors.add("tradeList facilityCurrencyAmount total " + tradeTotal
-                    + " does not equal globalDealProposedCommitmentAmount " + global);
-        }
     }
 
     private BigDecimal sum(JsonNode array, String field) {
         BigDecimal total = BigDecimal.ZERO;
         for (JsonNode item : array) {
-            BigDecimal value = decimal(item.get(field));
+            BigDecimal value = decimal(fieldValue(item, field));
             if (value == null) {
                 return null;
             }
@@ -275,8 +218,15 @@ public class DealDataVerifier {
         return total;
     }
 
-    private BigDecimal decimal(JsonNode node) {
-        return node != null && node.isNumber() ? node.decimalValue() : null;
+    private BigDecimal decimal(String text) {
+        if (text == null) {
+            return null;
+        }
+        try {
+            return new BigDecimal(text.replaceAll("[,$\\s]", ""));
+        } catch (NumberFormatException exception) {
+            return null;
+        }
     }
 
     private String message(Exception exception) {

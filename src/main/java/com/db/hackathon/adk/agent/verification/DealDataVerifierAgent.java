@@ -48,6 +48,9 @@ public class DealDataVerifierAgent implements WorkflowAgent {
 
         DealDataVerificationResult result = verifier.verify(json);
         context.setDealDataVerificationResult(result);
+        log.info("Deal data verification result for workflow {}: {}",
+                context.getWorkflow().getWorkflowId(),
+                result);
 
         if (!result.isValid()) {
             log.warn("Deal data verification failed: {}", result.getErrors());

@@ -50,7 +50,7 @@ public class WorkflowExecutor {
                     agent.getAgentType(),
                     workflow.getWorkflowId());
 
-            if (workflow.getStatus() == WorkflowStatus.VALIDATED) {
+            if (workflow.getStatus() == WorkflowStatus.CREDIT_AGREEMENT_VERIFIED) {
                 workflowManager.markCompleted(workflow);
                 log.info("Workflow {} marked COMPLETED.", workflow.getWorkflowId());
             }
