@@ -30,7 +30,6 @@ public class WorkflowEntity {
     @Column(name = "next_agent")
     private AgentType nextAgent;
 
-    @Lob
     @Column(name = "metadata")
     private String metadata;
 

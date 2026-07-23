@@ -3,6 +3,7 @@ package com.db.hackathon.subscribe;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,6 +13,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PdfUploadService {
     private final Storage storage;
     @Value("${google.bucket.name}")
@@ -26,6 +28,7 @@ public class PdfUploadService {
             throw new IllegalArgumentException("Only PDF files are allowed");
         }
 
+        log.info("Uploading file ....");
         Map<String, String> metadata = new HashMap<>();
         metadata.put("uuid", uuid);
         metadata.put("username", username);
@@ -36,6 +39,8 @@ public class PdfUploadService {
                 .build();
 
         storage.create(blobInfo, file.getBytes());
+
+        log.info("Uploaded file to GCS bucket");
 
         return String.format("gs://%s/%s", bucketName, file.getOriginalFilename());
     }

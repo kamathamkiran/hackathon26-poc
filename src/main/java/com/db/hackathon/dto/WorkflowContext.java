@@ -13,6 +13,8 @@ public class WorkflowContext {
 
     private WorkflowEntity workflow;
 
+    private String bucketName;
+
     private String filePath;
 
     private DocumentAnalysis documentAnalysis;

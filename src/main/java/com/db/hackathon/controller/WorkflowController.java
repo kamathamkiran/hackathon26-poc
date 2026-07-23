@@ -4,6 +4,7 @@ import com.db.hackathon.dto.WorkflowResponse;
 import com.db.hackathon.service.WorkflowService;
 import com.db.hackathon.subscribe.PdfUploadService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/workflow")
 @RequiredArgsConstructor
+@Slf4j
 public class WorkflowController {
 
     private final WorkflowService workflowService;
@@ -38,6 +40,7 @@ public class WorkflowController {
             @RequestParam("file") MultipartFile file) {
 
         try {
+            log.info("Input recieved {} {} {} ", uuid, username, file.getOriginalFilename());
             String fileUrl = pdfUploadService.uploadPdf(uuid, username, file);
             return ResponseEntity.ok("File uploaded successfully: " + fileUrl);
 

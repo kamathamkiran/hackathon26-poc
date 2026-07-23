@@ -3,7 +3,9 @@ package com.db.hackathon.subscribe;
 import com.db.hackathon.entity.WorkflowEntity;
 import com.db.hackathon.enums.AgentType;
 import com.db.hackathon.enums.WorkflowStatus;
+import com.db.hackathon.repository.WorkflowRepository;
 import com.db.hackathon.service.WorkflowService;
+import com.db.hackathon.workflow.WorkflowEngine;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.spring.pubsub.support.BasicAcknowledgeablePubsubMessage;
@@ -20,7 +22,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 public class AgreementSubscriber {
-    private final WorkflowService workflowService;
+    private final WorkflowRepository workflowRepository;
+    private final WorkflowEngine workflowEngine;
     private final ObjectMapper mapper;
 
     @ServiceActivator(inputChannel = "agreementInputChannel")
@@ -35,14 +38,28 @@ public class AgreementSubscriber {
 
             JsonNode fileMetadata = mapper.readTree(message.getPayload());
             originalMessage.ack();
-            String uuid = fileMetadata.get("uuid").asText();
+
+            // Read custom metadata
+            JsonNode metadata = fileMetadata.path("metadata");
+
+            String uuid = metadata.path("uuid").asText();
+            String username = metadata.path("username").asText();
+
             WorkflowEntity workflow = WorkflowEntity.builder()
-                    .workflowId(UUID.randomUUID().toString()) //pass uuid available in metadata
-                    .username("OPS_USER")
+                    .workflowId(uuid) //pass uuid available in metadata
+                    .username(username)
                     .status(WorkflowStatus.UPLOADED)
                     .nextAgent(AgentType.DOCUMENT_PARSER)
                     .metadata(fileMetadata.toString())
                     .build();
+
+            workflowRepository.save(workflow);
+
+            log.info("Saved data into database");
+
+            log.info("Triggering Orchestrator");
+
+            workflowEngine.execute(workflow);
 
         } catch (Exception ex) {
             log.error("Failed to process Pub/Sub message", ex);
