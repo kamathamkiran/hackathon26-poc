@@ -21,11 +21,12 @@
         <lombok.version>1.18.38</lombok.version>
         <google.cloud.libraries.version>26.74.0</google.cloud.libraries.version>
         <protobuf.version>4.33.2</protobuf.version>
-        <spring-boot.version>3.1.0</spring-boot.version>
     </properties>
 
+    <!-- Single dependencyManagement -->
     <dependencyManagement>
         <dependencies>
+
             <dependency>
                 <groupId>com.google.cloud</groupId>
                 <artifactId>libraries-bom</artifactId>
@@ -41,6 +42,15 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <dependency>
+                <groupId>com.google.cloud</groupId>
+                <artifactId>spring-cloud-gcp-dependencies</artifactId>
+                <version>4.10.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -61,6 +71,16 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-messaging</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.integration</groupId>
+            <artifactId>spring-integration-core</artifactId>
         </dependency>
 
         <!-- Database -->
@@ -96,6 +116,12 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-document-ai</artifactId>
+        </dependency>
+
+        <!-- Google Pub/Sub -->
+        <dependency>
+            <groupId>com.google.cloud</groupId>
+            <artifactId>spring-cloud-gcp-starter-pubsub</artifactId>
         </dependency>
 
         <!-- Protobuf -->
@@ -139,36 +165,28 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
 
-                <executions>
-                    <execution>
-                        <id>default-compile</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
 
-                        <configuration>
-                            <annotationProcessorPaths>
+                    <annotationProcessorPaths>
 
-                                <path>
-                                    <groupId>org.projectlombok</groupId>
-                                    <artifactId>lombok</artifactId>
-                                    <version>${lombok.version}</version>
-                                </path>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
 
-                                <path>
-                                    <groupId>org.springframework.boot</groupId>
-                                    <artifactId>spring-boot-configuration-processor</artifactId>
-                                    <version>${spring-boot.version}</version>
-                                </path>
+                        <path>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-configuration-processor</artifactId>
+                            <version>3.1.0</version>
+                        </path>
 
-                            </annotationProcessorPaths>
-                        </configuration>
-                    </execution>
-                </executions>
+                    </annotationProcessorPaths>
 
+                </configuration>
             </plugin>
 
         </plugins>
