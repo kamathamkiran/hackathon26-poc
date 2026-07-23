@@ -31,6 +31,8 @@ google:
     credentials: sc.json
   pubsub:
     subscription: agreement-upload-sub
+  bucket:
+      name: loaniq-agreements
 
 open-router:
   ai:
