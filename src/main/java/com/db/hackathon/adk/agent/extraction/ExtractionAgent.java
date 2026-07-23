@@ -48,7 +48,7 @@ public class ExtractionAgent implements WorkflowAgent {
 
     @Override
     public Object getOutput(WorkflowContext context) {
-        return context.getDocumentAnalysis();
+        return context.getDeal();
     }
 
 }

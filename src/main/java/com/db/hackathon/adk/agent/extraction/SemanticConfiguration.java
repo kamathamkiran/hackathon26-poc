@@ -16,7 +16,7 @@ public class SemanticConfiguration {
 
     private LlmAgent extractionAgent;
 
-    @Value("${google.ai.model}")
+    @Value("${open-router.ai.model}")
     private String model;
 
     @PostConstruct
