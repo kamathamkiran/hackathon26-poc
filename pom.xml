@@ -17,6 +17,7 @@
         <java.version>17</java.version>
         <google.adk.version>1.7.0</google.adk.version>
         <google.cloud.libraries.version>26.74.0</google.cloud.libraries.version>
+        <lombok.version>1.18.38</lombok.version>
     </properties>
 
     <dependencies>
@@ -116,10 +117,12 @@
                                 <path>
                                     <groupId>org.projectlombok</groupId>
                                     <artifactId>lombok</artifactId>
+                                    <version>${lombok.version}</version>
                                 </path>
                                 <path>
                                     <groupId>org.springframework.boot</groupId>
                                     <artifactId>spring-boot-configuration-processor</artifactId>
+                                    <version>${project.parent.version}</version>
                                 </path>
                             </annotationProcessorPaths>
                         </configuration>

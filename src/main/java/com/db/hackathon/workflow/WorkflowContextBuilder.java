@@ -27,7 +27,7 @@ public class WorkflowContextBuilder {
 
                 JsonNode node =
                         jsonSerializer.readTree(
-                                workflow.getJsonOutput());
+                                workflow.getMetadata());
 
                 context.setFilePath(node.get("filePath").asText());
             }
@@ -36,7 +36,7 @@ public class WorkflowContextBuilder {
 
                 DocumentAnalysis analysis =
                         jsonSerializer.deserialize(
-                                workflow.getJsonOutput(),
+                                workflow.getMetadata(),
                                 DocumentAnalysis.class);
 
                 context.setDocumentAnalysis(analysis);
@@ -46,7 +46,7 @@ public class WorkflowContextBuilder {
 
                 Agreement agreement =
                         jsonSerializer.deserialize(
-                                workflow.getJsonOutput(),
+                                workflow.getMetadata(),
                                 Agreement.class);
 
                 context.setAgreement(agreement);

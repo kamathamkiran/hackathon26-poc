@@ -87,8 +87,8 @@ public class CreditAgreementVerifierAgent implements WorkflowAgent {
     private List<FieldEvidence> collectEvidence(JsonNode deal, DocumentAnalysis document) {
         List<FieldEvidence> evidence = new ArrayList<>();
         if (document == null || document.getPages() == null) {
-            evidence.add(new FieldEvidence("document", "", "", "",
-                    "Document analysis is unavailable"));
+            evidence.add(new FieldEvidence("document", "", "", ""
+            ,"Missing page/line range for field"));
             return evidence;
         }
         collectLeafEvidence(deal, deal, "", document, evidence);
@@ -126,21 +126,23 @@ public class CreditAgreementVerifierAgent implements WorkflowAgent {
         String range = rangeNode.asText();
         try {
             evidence.add(new FieldEvidence(path, node.toString(), range,
-                    excerpt(document, PageLineRange.parse(range))));
+                    excerpt(document, PageLineRange.parse(range)),"Missing page/line range for field"));
         } catch (RuntimeException exception) {
-            evidence.add(new FieldEvidence(path, node.toString(), range, "",
-                    "Cannot read cited range: " + exception.getMessage()));
+            evidence.add(new FieldEvidence(path, node.toString(), range, ""
+            ,"Missing page/line range for field"));
         }
     }
 
     private String excerpt(DocumentAnalysis document, PageLineRange range) {
         StringBuilder result = new StringBuilder();
         for (int pageNumber = range.startPage(); pageNumber <= range.endPage(); pageNumber++) {
+            int finalPageNumber = pageNumber;
+            int finalPageNumber1 = pageNumber;
             DocumentPage page = document.getPages().stream()
                     .filter(candidate -> candidate.getPageNumber() != null
-                            && candidate.getPageNumber() == pageNumber)
+                            && candidate.getPageNumber() == finalPageNumber)
                     .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Page not found: " + pageNumber));
+                    .orElseThrow(() -> new IllegalArgumentException("Page not found: " + finalPageNumber1));
 
             String[] lines = (page.getText() == null ? "" : page.getText()).split("\\R", -1);
             int firstLine = pageNumber == range.startPage() ? range.startLine() : 1;

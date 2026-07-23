@@ -1,8 +1,7 @@
 package com.db.hackathon.adk.agent.verification;
 
 import com.db.hackathon.model.verification.DealDataVerificationResult;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
 import com.networknt.schema.Error;
 import com.networknt.schema.Schema;
 import com.networknt.schema.SchemaRegistry;
@@ -10,6 +9,7 @@ import com.networknt.schema.SpecificationVersion;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -35,7 +35,7 @@ public class DealDataVerifier {
 
     public DealDataVerificationResult verify(String json) {
         List<String> errors = new ArrayList<>();
-        JsonNode deal;
+        tools.jackson.databind.JsonNode deal;
 
         try {
             deal = objectMapper.readTree(json);
@@ -58,7 +58,7 @@ public class DealDataVerifier {
             }
 
             Schema schema = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_7)
-                    .getSchema(schemaNode);
+                    .getSchema(String.valueOf(schemaNode));
             for (Error error : schema.validate(deal)) {
                 errors.add("JSON Schema " + error.getInstanceLocation() + ": " + error.getMessage());
             }
@@ -82,7 +82,7 @@ public class DealDataVerifier {
                 .build();
     }
 
-    private JsonNode readResource(String resourceName) throws IOException {
+    private tools.jackson.databind.JsonNode readResource(String resourceName) throws IOException {
         ClassPathResource resource = new ClassPathResource(resourceName);
         try (var inputStream = resource.getInputStream()) {
             return objectMapper.readTree(inputStream);
@@ -99,7 +99,7 @@ public class DealDataVerifier {
         Set<String> expectedPaths = new HashSet<>();
         collectFieldPaths(deal, "", expectedPaths);
 
-        Iterator<Map.Entry<String, JsonNode>> fields = locations.fields();
+        Iterator<Map.Entry<String, JsonNode>> fields = locations.properties().iterator();
         while (fields.hasNext()) {
             Map.Entry<String, JsonNode> entry = fields.next();
             String path = entry.getKey();
@@ -121,7 +121,7 @@ public class DealDataVerifier {
 
     private void collectFieldPaths(JsonNode node, String path, Set<String> paths) {
         if (node.isObject()) {
-            Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
+            Iterator<Map.Entry<String, JsonNode>> fields = node.properties().iterator();
             while (fields.hasNext()) {
                 Map.Entry<String, JsonNode> field = fields.next();
                 if (path.isEmpty() && field.getKey().equals("_sourceLocations")) {
