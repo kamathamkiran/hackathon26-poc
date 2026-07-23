@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +25,7 @@ public class PdfUploadService {
             throw new IllegalArgumentException("File is empty");
         }
 
-        if (!file.getOriginalFilename().toLowerCase().endsWith(".pdf")) {
+        if (!Objects.requireNonNull(file.getOriginalFilename()).toLowerCase().endsWith(".pdf")) {
             throw new IllegalArgumentException("Only PDF files are allowed");
         }
 

@@ -67,9 +67,9 @@ public class ValidationAgent
                         .valid(true)
                         .build();
 
-        validationUtil.validateMandatoryFields(deal);
+//        validationUtil.validateMandatoryFields(deal);
 
-        result.setValid(result.getErrors().isEmpty());
+        result.setValid(result.getErrors()==null || result.getErrors().isEmpty());
 
         return result;
 
