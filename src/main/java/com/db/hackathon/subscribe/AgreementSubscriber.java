@@ -63,6 +63,7 @@ public class AgreementSubscriber {
 
         } catch (Exception ex) {
             log.error("Failed to process Pub/Sub message", ex);
+            assert originalMessage != null;
             originalMessage.ack();
         }
     }

@@ -1,7 +1,7 @@
 package com.db.hackathon.adk.agent.verification;
 
 import com.db.hackathon.adk.agent.WorkflowAgent;
-import com.db.hackathon.adk.agent.extraction.AdkRunnerService;
+import com.db.hackathon.adk.agent.extraction.SemanticRunnerService;
 import com.db.hackathon.dto.WorkflowContext;
 import com.db.hackathon.enums.AgentType;
 import com.db.hackathon.enums.WorkflowStatus;
@@ -26,7 +26,7 @@ import java.util.Map;
 @Slf4j
 public class CreditAgreementVerifierAgent implements WorkflowAgent {
 
-    private final AdkRunnerService runnerService;
+    private final SemanticRunnerService runnerService;
     private final ObjectMapper objectMapper;
 
     @Override

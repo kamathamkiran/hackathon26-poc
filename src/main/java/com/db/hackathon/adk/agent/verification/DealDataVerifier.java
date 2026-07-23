@@ -31,7 +31,7 @@ public class DealDataVerifier {
     private static final String SOURCE_RANGE_PATTERN =
             "^[1-9][0-9]*,[1-9][0-9]*-[1-9][0-9]*,[1-9][0-9]*$";
 
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public DealDataVerificationResult verify(String json) {
         List<String> errors = new ArrayList<>();

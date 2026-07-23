@@ -5,10 +5,21 @@ spring:
   application:
     name: credit-agreement-ai
   datasource:
-    url: jdbc:postgresql://34.63.203.249:5432/postgres
-    username: postgres
-    password: password
-    driver-class-name: org.postgresql.Driver
+#    url: jdbc:postgresql://34.63.203.249:5432/postgres
+#    username: postgres
+#    password: password
+#    driver-class-name: org.postgresql.Driver
+    url: jdbc:h2:mem:hackathon26
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+  h2:
+    console:
+      enabled: true
+
 
 logging:
   level:
@@ -24,7 +35,7 @@ google:
     project-id: 277914962735
     location: asia-south1
     processor-id: bbe75eb9ad1a653c
-    credentials: sc.json
+    credentials: hackathon-document-ai.json
   pubsub:
     subscription: agreement-upload-sub
   bucket:

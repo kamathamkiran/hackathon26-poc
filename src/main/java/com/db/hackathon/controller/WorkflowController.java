@@ -3,6 +3,7 @@ package com.db.hackathon.controller;
 import com.db.hackathon.dto.WorkflowResponse;
 import com.db.hackathon.service.WorkflowService;
 import com.db.hackathon.subscribe.PdfUploadService;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -26,11 +27,10 @@ public class WorkflowController {
             value = "/process",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    public void process(
-            @RequestParam("filePath") String filePath) {
+    public WorkflowResponse process(
+            @RequestParam("filePath") JsonNode metadata) {
 
-        //return workflowService.process(filePath);
-        return;
+        return workflowService.process(metadata);
     }
 
     @PostMapping("/upload")
@@ -40,7 +40,7 @@ public class WorkflowController {
             @RequestParam("file") MultipartFile file) {
 
         try {
-            log.info("Input recieved {} {} {} ", uuid, username, file.getOriginalFilename());
+            log.info("Input received {} {} {} ", uuid, username, file.getOriginalFilename());
             String fileUrl = pdfUploadService.uploadPdf(uuid, username, file);
             return ResponseEntity.ok("File uploaded successfully: " + fileUrl);
 

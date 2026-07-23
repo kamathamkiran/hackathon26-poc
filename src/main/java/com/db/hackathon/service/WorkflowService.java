@@ -21,7 +21,6 @@ public class WorkflowService {
 
     private final WorkflowEngine workflowEngine;
     private final WorkflowRepository workflowRepository;
-    private final JsonSerializerService jsonSerializer;
 
     public WorkflowResponse process(JsonNode fileMetadata) {
         String uuid = fileMetadata.get("uuid").asText();

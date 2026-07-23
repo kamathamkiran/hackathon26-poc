@@ -39,10 +39,10 @@ public class DealDataVerifierAgent implements WorkflowAgent {
     public void process(WorkflowContext context) {
         String json = context.getDealDataJson();
         if (json == null || json.isBlank()) {
-            if (context.getAgreement() == null) {
+            if (context.getDeal() == null) {
                 throw new WorkflowVerificationException("No extracted deal data was available for verification");
             }
-            json = jsonSerializer.serialize(context.getAgreement());
+            json = jsonSerializer.serialize(context.getDeal());
             context.setDealDataJson(json);
         }
 
