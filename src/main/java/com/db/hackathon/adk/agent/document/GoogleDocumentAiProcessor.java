@@ -22,12 +22,12 @@ public class GoogleDocumentAiProcessor {
     private final DocumentAiProperties properties;
     private final DocumentAiMapper mapper;
 
-    public DocumentAnalysis process(Path pdfPath) throws IOException {
+    public DocumentAnalysis process(byte[] pdfBytes, Path pdfPath) throws IOException {
 
         log.info("Processing document: path={}", pdfPath);
 
         RawDocument rawDocument = RawDocument.newBuilder()
-                    .setContent(ByteString.readFrom(java.nio.file.Files.newInputStream(pdfPath)))
+                    .setContent(ByteString.copyFrom(pdfBytes))
                     .setMimeType(SUPPORTED_MIME_TYPE)
                     .build();
 

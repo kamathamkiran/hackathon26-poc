@@ -1,71 +1,90 @@
 package com.db.hackathon.adk.agent.validation;
 
-import com.db.hackathon.model.extraction.Agreement;
+import com.db.hackathon.model.extraction.Deal;
 import com.db.hackathon.model.extraction.ExtractedField;
+import com.db.hackathon.model.extraction.Facility;
 import com.db.hackathon.model.validation.ValidationMessage;
 import com.db.hackathon.model.validation.ValidationResult;
+import com.google.api.pathtemplate.ValidationException;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ValidationService {
 
-    private static final double CONFIDENCE_THRESHOLD = 0.80;
+    void validateMandatoryFields(Deal deal) {
 
-    public void validateMandatoryFields(
-            ValidationResult result,
-            Agreement agreement) {
+        validate("Deal Name", deal.getDealName());
 
-        for (AgreementField field : AgreementField.values()) {
+        validate("Currency", deal.getCurrency());
 
-            ExtractedField extracted = agreement.getField(field);
+        validate("Agreement Date", deal.getAgreementDate());
 
-            if (field.isMandatory()) {
-                validateMandatory(result, field, extracted);
+        validate("Global Commitment Amount",
+                deal.getGlobalDealProposedCommitmentAmount());
+
+        if (deal.getDealBorrower() == null) {
+            throw new ValidationException("Deal Borrower is mandatory.");
+        }
+
+        validate("Borrower",
+                deal.getDealBorrower().getCustomerExternalId());
+
+        if (deal.getDealAdminAgent() == null) {
+            throw new ValidationException("Deal Admin Agent is mandatory.");
+        }
+
+        validate("Admin Agent",
+                deal.getDealAdminAgent().getCustomerExternalId());
+
+        if (deal.getFacilityList() == null ||
+                deal.getFacilityList().isEmpty()) {
+
+            throw new ValidationException(
+                    "At least one Facility is required.");
+        }
+
+        for (int i = 0; i < deal.getFacilityList().size(); i++) {
+
+            Facility facility =
+                    deal.getFacilityList().get(i);
+
+            validate(
+                    "Facility[" + i + "] Name",
+                    facility.getFacilityName());
+
+            validate(
+                    "Facility[" + i + "] Type",
+                    facility.getFacilityType());
+
+            validate(
+                    "Facility[" + i + "] Commitment Amount",
+                    facility.getProposedCommitmentAmount());
+        }
+
+        if (deal.getInterestPricingOptions() != null) {
+
+            for (int i = 0; i < deal.getInterestPricingOptions().size(); i++) {
+
+                validate(
+                        "Interest Pricing[" + i + "]",
+                        deal.getInterestPricingOptions()
+                                .get(i)
+                                .getPricingOption());
             }
-
-            validateConfidence(result, field, extracted);
-        }
-
-    }
-
-    private void validateMandatory(
-            ValidationResult result,
-            AgreementField field,
-            ExtractedField extracted) {
-
-        if (extracted == null ||
-                extracted.getValue() == null ||
-                extracted.getValue().isBlank()) {
-
-            result.getErrors().add(
-                    ValidationMessage.builder()
-                            .field(field.name())
-                            .code(ValidationCode.MISSING_FIELD)
-                            .message(field.name() + " is mandatory")
-                            .build());
         }
     }
 
-    private void validateConfidence(
-            ValidationResult result,
-            AgreementField field,
-            ExtractedField extracted) {
+    private void validate(
+            String fieldName,
+            ExtractedField field) {
 
-        if (extracted == null ||
-                extracted.getConfidence() == null) {
-            return;
-        }
+        if (field == null
+                || field.getValue() == null
+                || field.getValue().isBlank()) {
 
-        if (extracted.getConfidence() < CONFIDENCE_THRESHOLD) {
-
-            result.getWarnings().add(
-                    ValidationMessage.builder()
-                            .field(field.name())
-                            .pageNumber(extracted.getPageNumber())
-                            .code(ValidationCode.LOW_CONFIDENCE)
-                            .message(field.name() + " confidence below threshold")
-                            .build());
-
+            throw new ValidationException(
+                    fieldName + " is mandatory.");
         }
     }
+
 }

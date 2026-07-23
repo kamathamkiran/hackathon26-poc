@@ -3,14 +3,16 @@ package com.db.hackathon.workflow;
 import com.db.hackathon.dto.WorkflowContext;
 import com.db.hackathon.entity.WorkflowEntity;
 import com.db.hackathon.model.document.DocumentAnalysis;
-import com.db.hackathon.model.extraction.Agreement;
+import com.db.hackathon.model.extraction.Deal;
 import com.db.hackathon.service.JsonSerializerService;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class WorkflowContextBuilder {
 
     private final JsonSerializerService jsonSerializer;
@@ -29,7 +31,10 @@ public class WorkflowContextBuilder {
                         jsonSerializer.readTree(
                                 workflow.getMetadata());
 
-                context.setFilePath(node.get("filePath").asText());
+                context.setBucketName(node.get("bucket").asText());
+                context.setFilePath(node.get("name").asText());
+
+                log.info("Context: {}", context);
             }
 
             case PARSED -> {
@@ -44,12 +49,12 @@ public class WorkflowContextBuilder {
 
             case EXTRACTED -> {
 
-                Agreement agreement =
+                Deal deal =
                         jsonSerializer.deserialize(
                                 workflow.getMetadata(),
-                                Agreement.class);
+                                Deal.class);
 
-                context.setAgreement(agreement);
+                context.setDeal(deal);
             }
 
             default -> {
