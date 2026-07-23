@@ -24,10 +24,11 @@ public class WorkflowController {
             value = "/process",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    public WorkflowResponse process(
+    public void process(
             @RequestParam("filePath") String filePath) {
 
-        return workflowService.process(filePath);
+        //return workflowService.process(filePath);
+        return;
     }
 
 }

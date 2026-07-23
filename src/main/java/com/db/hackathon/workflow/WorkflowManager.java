@@ -34,8 +34,8 @@ public class WorkflowManager {
             Object output) {
 
         workflow.setStatus(status);
-        workflow.setLastCompletedAgent(completedAgent);
-        workflow.setJsonOutput(jsonSerializer.serialize(output));
+        workflow.setNextAgent(completedAgent);
+        workflow.setMetadata(jsonSerializer.serialize(output));
         workflowRepository.save(workflow);
     }
 

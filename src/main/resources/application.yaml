@@ -28,7 +28,9 @@ google:
     project-id: 277914962735
     location: asia-south1
     processor-id: bbe75eb9ad1a653c
-    credentials: hackathon-document-ai.json
+    credentials: sc.json
+  pubsub:
+    subscription: agreement-upload-sub
 
 open-router:
   ai:
