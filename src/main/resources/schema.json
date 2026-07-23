@@ -1,0 +1,179 @@
+{
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Deal Creation Schema",
+    "description": "Schema for validating the required fields for deal, facility, and trade creation.",
+    "type": "object",
+    "properties": {
+      "_sourceLocations": {
+        "description": "Page and line range for every deal field. Format: startPage,startLine-endPage,endLine.",
+        "type": "object",
+        "patternProperties": {
+          "^[A-Za-z0-9_.\\[\\]]+$": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*,[1-9][0-9]*-[1-9][0-9]*,[1-9][0-9]*$"
+          }
+        },
+        "additionalProperties": false,
+        "minProperties": 1
+      },
+      "dealName": { "type": "string", "maxLength": 40 },
+      "currency": { "type": "string" },
+      "department": { "type": "string" },
+      "branch": { "type": "string" },
+      "processingAreaCode": { "type": "string" },
+      "classification": { "type": "string" },
+      "agreementDate": { "type": "string", "format": "date" },
+      "globalDealProposedCommitmentAmount": { "type": "number" },
+      "expenseCode": { "type": "string" },
+      "version": { "type": "string" },
+      "dealAdminAgent": {
+        "type": "object",
+        "properties": {
+          "customerExternalId": { "type": "string", "maxLength": 15 },
+          "dealAdminServicingGroup": {
+            "type": "object",
+            "properties": {
+              "profileType": { "type": "string" },
+              "version": { "type": "string" }
+            },
+            "required": ["profileType", "version"]
+          },
+          "version": { "type": "string" }
+        },
+        "required": ["customerExternalId", "version", "dealAdminServicingGroup"]
+      },
+      "dealBorrower": {
+        "type": "object",
+        "properties": {
+          "customerExternalId": { "type": "string", "maxLength": 15 },
+          "borrowerIndicator": { "type": "string" },
+          "version": { "type": "string" }
+        },
+        "required": ["customerExternalId", "version", "borrowerIndicator"]
+      },
+      "interestPricingOptions": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "pricingOption": { "type": "string" },
+            "version": { "type": "string" }
+          },
+          "required": ["pricingOption", "version"]
+        }
+      },
+      "facilityList": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "dealTrackingNumber": { "type": "string", "maxLength": 12 },
+            "facilityName": { "type": "string", "maxLength": 30 },
+            "facilityType": { "type": "string" },
+            "proposedCommitmentAmount": { "type": "number" },
+            "closingCommitment": { "type": "number" },
+            "agreementDate": { "type": "string", "format": "date" },
+            "effectiveDate": { "type": "string", "format": "date" },
+            "expiryDate": { "type": "string", "format": "date" },
+            "finalMaturityDate": { "type": "string", "format": "date" },
+            "risk": {
+              "type": "object",
+              "properties": {
+                "riskTypeCode": { "type": "string" },
+                "version": { "type": "string" }
+              },
+              "required": ["riskTypeCode", "version"]
+            },
+            "loanPurpose": {
+              "type": "object",
+              "properties": {
+                "loanPurposeCode": { "type": "string" },
+                "version": { "type": "string" }
+              },
+              "required": ["loanPurposeCode", "version"]
+            },
+            "facilityInterestPricingList": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "optionName": { "type": "string" },
+                  "rateBasis": { "type": "string" },
+                  "baseRate": { "type": "string" },
+                  "spread": { "type": "number" },
+                  "version": { "type": "string" }
+                },
+                "required": ["optionName", "rateBasis", "baseRate", "spread", "version"]
+              }
+            },
+            "version": { "type": "string" },
+            "facilityRid": { "type": ["string", "null"] },
+            "facilitySublimit": { "type": ["string", "null"] },
+            "globalNewAmount": { "type": ["number", "null"] }
+          },
+          "required": [
+            "dealTrackingNumber", "facilityName", "facilityType",
+            "proposedCommitmentAmount", "closingCommitment",
+            "agreementDate", "effectiveDate", "expiryDate",
+            "finalMaturityDate", "risk", "loanPurpose",
+            "facilityInterestPricingList", "version"
+          ]
+        }
+      },
+      "tradeList": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "dealInternalId": { "type": "string", "maxLength": 8 },
+            "investmentType": { "type": "string" },
+            "isDistressed": { "type": "string", "enum": ["Y", "N"] },
+            "tradeDate": { "type": "string", "format": "date" },
+            "circleFinalStatusCode": { "type": "string" },
+            "version": { "type": "string" },
+            "buyer": {
+              "type": "object",
+              "properties": {
+                "customerInternalId": { "type": "string" },
+                "locationCode": { "type": ["string", "null"] },
+                "buyerServicingGroup": { "type": ["string", "null"] },
+                "version": { "type": "string" }
+              },
+              "required": ["customerInternalId", "version"]
+            },
+            "facilityPosition": {
+              "type": "object",
+              "properties": {
+                "price": { "type": "number" },
+                "portfolioAllocation": {
+                  "type": "object",
+                  "properties": {
+                    "expenseCode": { "type": "string" },
+                    "facilityCurrencyAmount": { "type": "number" },
+                    "version": { "type": "string" }
+                  },
+                  "required": ["expenseCode", "facilityCurrencyAmount", "version"]
+                },
+                "version": { "type": "string" }
+              },
+              "required": ["price", "portfolioAllocation", "version"]
+            }
+          },
+          "required": [
+            "dealInternalId", "investmentType", "isDistressed",
+            "tradeDate", "circleFinalStatusCode", "version",
+            "buyer", "facilityPosition"
+          ]
+        }
+      }
+    },
+    "required": [
+      "_sourceLocations", "dealName", "currency", "department", "branch",
+      "processingAreaCode", "classification", "agreementDate",
+      "globalDealProposedCommitmentAmount", "expenseCode", "version",
+      "dealAdminAgent", "dealBorrower", "interestPricingOptions",
+      "facilityList", "tradeList"
+    ]
+  }
+}

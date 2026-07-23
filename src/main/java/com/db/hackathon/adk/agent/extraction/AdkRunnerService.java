@@ -72,6 +72,11 @@ public class AdkRunnerService {
 
     }
 
+    /** Runs a second-stage critic prompt through the configured ADK model. */
+    public String runPrompt(String prompt) throws Exception {
+        return clean(execute(prompt, createSession()));
+    }
+
     private String execute(
             String prompt,
             String sessionId)

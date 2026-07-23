@@ -4,6 +4,8 @@ import com.db.hackathon.entity.WorkflowEntity;
 import com.db.hackathon.model.document.DocumentAnalysis;
 import com.db.hackathon.model.extraction.Agreement;
 import com.db.hackathon.model.validation.ValidationResult;
+import com.db.hackathon.model.verification.CreditAgreementVerificationResult;
+import com.db.hackathon.model.verification.DealDataVerificationResult;
 import lombok.Builder;
 import lombok.Data;
 
@@ -20,4 +22,10 @@ public class WorkflowContext {
     private Agreement agreement;
 
     private ValidationResult validationResult;
+
+    private String dealDataJson;
+
+    private DealDataVerificationResult dealDataVerificationResult;
+
+    private CreditAgreementVerificationResult creditAgreementVerificationResult;
 }

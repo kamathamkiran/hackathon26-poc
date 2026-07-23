@@ -6,5 +6,9 @@ public enum AgentType {
 
     EXTRACTION,
 
-    VALIDATION
+    VALIDATION,
+
+    DEAL_DATA_VERIFIER,
+
+    CREDIT_AGREEMENT_VERIFIER
 }

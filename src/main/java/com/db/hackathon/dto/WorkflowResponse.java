@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import com.db.hackathon.model.validation.ValidationResult;
 import com.db.hackathon.enums.WorkflowStatus;
+import com.db.hackathon.model.verification.CreditAgreementVerificationResult;
+import com.db.hackathon.model.verification.DealDataVerificationResult;
 
 @Data
 @Builder
@@ -17,5 +19,9 @@ public class WorkflowResponse {
     private Agreement agreement;
 
     private ValidationResult validationResult;
+
+    private DealDataVerificationResult dealDataVerificationResult;
+
+    private CreditAgreementVerificationResult creditAgreementVerificationResult;
 
 }

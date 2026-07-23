@@ -13,6 +13,10 @@ public enum WorkflowStatus {
     VALIDATING,
     VALIDATED,
 
+    DEAL_DATA_VERIFIED,
+
+    CREDIT_AGREEMENT_VERIFIED,
+
     COMPLETED,
 
     FAILED
