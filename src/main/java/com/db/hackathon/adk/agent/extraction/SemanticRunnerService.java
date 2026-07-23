@@ -1,7 +1,7 @@
 package com.db.hackathon.adk.agent.extraction;
 
 import com.db.hackathon.adk.prompt.PromptBuilder;
-import com.db.hackathon.model.extraction.Agreement;
+import com.db.hackathon.model.extraction.Deal;
 import com.google.adk.agents.RunConfig;
 import com.google.adk.artifacts.InMemoryArtifactService;
 import com.google.adk.events.Event;
@@ -23,9 +23,9 @@ import com.db.hackathon.model.document.DocumentAnalysis;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AdkRunnerService {
+public class SemanticRunnerService {
 
-    private final AdkConfiguration configuration;
+    private final SemanticConfiguration configuration;
     private final PromptBuilder promptBuilder;
     private final ObjectMapper objectMapper;
 
@@ -54,7 +54,7 @@ public class AdkRunnerService {
 
     }
 
-    public Agreement extractAgreement(
+    public Deal extractAgreement(
             DocumentAnalysis documentAnalysis)
             throws Exception {
 
@@ -68,7 +68,7 @@ public class AdkRunnerService {
 
         return objectMapper.readValue(
                 response,
-                Agreement.class);
+                Deal.class);
 
     }
 

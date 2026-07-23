@@ -3,8 +3,8 @@ package com.db.hackathon.adk.agent.extraction;
 import com.db.hackathon.adk.agent.WorkflowAgent;
 import com.db.hackathon.enums.AgentType;
 import com.db.hackathon.enums.WorkflowStatus;
-import com.db.hackathon.model.extraction.Agreement;
 import com.db.hackathon.dto.WorkflowContext;
+import com.db.hackathon.model.extraction.Deal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ExtractionAgent implements WorkflowAgent {
 
-    private final AdkRunnerService runnerService;
+    private final SemanticRunnerService runnerService;
 
     @Override
     public AgentType getAgentType() {
@@ -37,10 +37,10 @@ public class ExtractionAgent implements WorkflowAgent {
 
         log.info("Starting agreement extraction");
 
-        Agreement agreement = runnerService.extractAgreement(
+        Deal deal = runnerService.extractAgreement(
                         context.getDocumentAnalysis());
 
-        context.setAgreement(agreement);
+        context.setDeal(deal);
 
         log.info("Agreement extraction completed");
 

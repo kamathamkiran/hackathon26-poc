@@ -3,7 +3,7 @@ package com.db.hackathon.workflow;
 import com.db.hackathon.dto.WorkflowContext;
 import com.db.hackathon.entity.WorkflowEntity;
 import com.db.hackathon.model.document.DocumentAnalysis;
-import com.db.hackathon.model.extraction.Agreement;
+import com.db.hackathon.model.extraction.Deal;
 import com.db.hackathon.service.JsonSerializerService;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
@@ -49,12 +49,12 @@ public class WorkflowContextBuilder {
 
             case EXTRACTED -> {
 
-                Agreement agreement =
+                Deal deal =
                         jsonSerializer.deserialize(
                                 workflow.getMetadata(),
-                                Agreement.class);
+                                Deal.class);
 
-                context.setAgreement(agreement);
+                context.setDeal(deal);
             }
 
             default -> {

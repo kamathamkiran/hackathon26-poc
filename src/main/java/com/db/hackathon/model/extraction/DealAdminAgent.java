@@ -6,16 +6,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class ExtractedField {
+public class DealAdminAgent {
 
-    private String value;
+    private ExtractedField customerExternalId;
 
-    private Integer pageNumber;
-
-    private Double confidence;
-
-    private String sourceText;
+    private DealAdminServicingGroup dealAdminServicingGroup;
 }

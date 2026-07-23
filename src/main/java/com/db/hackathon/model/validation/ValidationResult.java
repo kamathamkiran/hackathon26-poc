@@ -16,10 +16,5 @@ public class ValidationResult {
 
     private boolean valid;
 
-    @Builder.Default
-    private List<ValidationMessage> errors = new ArrayList<>();
-
-    @Builder.Default
-    private List<ValidationMessage> warnings = new ArrayList<>();
-
+    private List<ValidationError> errors;
 }

@@ -1,6 +1,6 @@
 package com.db.hackathon.dto;
 
-import com.db.hackathon.model.extraction.Agreement;
+import com.db.hackathon.model.extraction.Deal;
 import lombok.Builder;
 import lombok.Data;
 import com.db.hackathon.model.validation.ValidationResult;
@@ -14,7 +14,7 @@ public class WorkflowResponse {
 
     private WorkflowStatus status;
 
-    private Agreement agreement;
+    private Deal deal;
 
     private ValidationResult validationResult;
 

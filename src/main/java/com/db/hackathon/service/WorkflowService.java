@@ -41,7 +41,7 @@ public class WorkflowService {
         return WorkflowResponse.builder()
                 .workflowId(context.getWorkflow().getWorkflowId())
                 .status(context.getWorkflow().getStatus())
-                .agreement(context.getAgreement())
+                .deal(context.getDeal())
                 .validationResult(context.getValidationResult())
                 .build();
 

@@ -1,9 +1,10 @@
 package com.db.hackathon.adk.agent.validation;
 
 import com.db.hackathon.adk.agent.WorkflowAgent;
+import com.db.hackathon.dto.WorkflowResponse;
 import com.db.hackathon.enums.AgentType;
 import com.db.hackathon.enums.WorkflowStatus;
-import com.db.hackathon.model.extraction.Agreement;
+import com.db.hackathon.model.extraction.Deal;
 import com.db.hackathon.model.validation.ValidationResult;
 import com.db.hackathon.dto.WorkflowContext;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +40,7 @@ public class ValidationAgent
 
         log.info("Starting validation");
 
-        ValidationResult result = validate(context.getAgreement());
+        ValidationResult result = validate(context.getDeal());
 
         context.setValidationResult(result);
 
@@ -49,18 +50,24 @@ public class ValidationAgent
 
     @Override
     public Object getOutput(WorkflowContext context) {
-        return context.getValidationResult();
+
+        return WorkflowResponse.builder()
+                .workflowId(context.getWorkflow().getWorkflowId())
+                .status(context.getWorkflow().getStatus())
+                .deal(context.getDeal())
+                .validationResult(context.getValidationResult())
+                .build();
     }
 
     public ValidationResult validate(
-            Agreement agreement) {
+            Deal deal) {
 
         ValidationResult result =
                 ValidationResult.builder()
                         .valid(true)
                         .build();
 
-        validationUtil.validateMandatoryFields(result, agreement);
+        validationUtil.validateMandatoryFields(deal);
 
         result.setValid(result.getErrors().isEmpty());
 
