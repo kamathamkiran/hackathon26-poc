@@ -28,7 +28,6 @@ public class WorkflowEngine {
         try {
             log.info("Executing workflow: {}", workflow.getWorkflowId());
 
-
             switch (workflow.getStatus()) {
 
                 case UPLOADED -> {

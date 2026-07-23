@@ -22,20 +22,21 @@ public class WorkflowEntity {
     @Column(nullable = false)
     private String username;
 
-    @Column(nullable = false)
-    private String fileName;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private WorkflowStatus status;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "last_completed_agent")
-    private AgentType lastCompletedAgent;
+    @Column(name = "next_agent")
+    private AgentType nextAgent;
 
     @Lob
-    @Column(name = "json_output")
-    private String jsonOutput;
+    @Column(name = "metadata")
+    private String metadata;
+
+    @Lob
+    @Column(name="human_output")
+    private String humanJson;
 
     @Lob
     @Column(name = "failure_reason")
@@ -60,12 +61,11 @@ public class WorkflowEntity {
         updatedAt = LocalDateTime.now();
     }
 
-    public WorkflowEntity(String id, String opsUser, String fileName, WorkflowStatus workflowStatus, AgentType agentType, String jsonOutput) {
+    public WorkflowEntity(String id, String opsUser, WorkflowStatus workflowStatus, AgentType agentType, String jsonOutput) {
         this.workflowId = id;
         this.username = opsUser;
-        this.fileName = fileName;
         this.status = workflowStatus;
-        this.lastCompletedAgent = agentType;
-        this.jsonOutput = jsonOutput;
+        this.nextAgent = agentType;
+        this.metadata = jsonOutput;
     }
 }

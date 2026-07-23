@@ -26,10 +26,9 @@ public class WorkflowService {
         WorkflowEntity workflow = WorkflowEntity.builder()
                 .workflowId(UUID.randomUUID().toString())
                 .username("OPS_USER")
-                .fileName("sample.pdf")
                 .status(WorkflowStatus.UPLOADED)
-                .lastCompletedAgent(AgentType.DOCUMENT_PARSER)
-                .jsonOutput(
+                .nextAgent(AgentType.DOCUMENT_PARSER)
+                .metadata(
                         jsonSerializer.serialize(
                         Map.of("filePath", filePath)
                 ))
