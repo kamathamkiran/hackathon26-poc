@@ -1,15 +1,17 @@
-package com.db.hackathon.adk.agent.validation;
+package com.db.hackathon.agents.validation;
 
-import com.db.hackathon.adk.agent.WorkflowAgent;
-import com.db.hackathon.dto.WorkflowResponse;
+import com.db.hackathon.agents.WorkflowAgent;
+import com.db.hackathon.dto.ExtractionResponse;
 import com.db.hackathon.enums.AgentType;
 import com.db.hackathon.enums.WorkflowStatus;
-import com.db.hackathon.model.extraction.Deal;
+import com.db.hackathon.model.validation.ValidationIssue;
 import com.db.hackathon.model.validation.ValidationResult;
 import com.db.hackathon.dto.WorkflowContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -17,16 +19,11 @@ import org.springframework.stereotype.Component;
 public class ValidationAgent
         implements WorkflowAgent {
 
-    private final ValidationService validationUtil;
+    private final ValidationService validationService;
 
     @Override
     public AgentType getAgentType() {
         return AgentType.VALIDATION;
-    }
-
-    @Override
-    public WorkflowStatus getInputStatus() {
-        return WorkflowStatus.VALIDATING;
     }
 
     @Override
@@ -40,39 +37,25 @@ public class ValidationAgent
 
         log.info("Starting validation");
 
-        ValidationResult result = validate(context.getDeal());
+        ValidationResult result = validationService.validate(context.getDeal());
 
         context.setValidationResult(result);
 
-        log.info("Validation completed");
-
+        log.info("Validation completed: {} error(s), {} warning(s)",
+                result.getErrors() == null ? 0 : result.getErrors().size(),
+                result.getWarnings() == null ? 0 : result.getWarnings().size());
     }
 
     @Override
     public Object getOutput(WorkflowContext context) {
 
-        return WorkflowResponse.builder()
+        ValidationResult validation = context.getValidationResult();
+        List<ValidationIssue> issues = validation == null ? List.of() : validation.allIssues();
+
+        return ExtractionResponse.builder()
                 .workflowId(context.getWorkflow().getWorkflowId())
-                .status(context.getWorkflow().getStatus())
                 .deal(context.getDeal())
-                .validationResult(context.getValidationResult())
+                .validationIssues(issues)
                 .build();
-    }
-
-    public ValidationResult validate(
-            Deal deal) {
-
-        ValidationResult result =
-                ValidationResult.builder()
-                        .valid(true)
-                        .build();
-
-//        validationUtil.validateMandatoryFields(deal);
-
-        result.setValid(result.getErrors()==null || result.getErrors().isEmpty());
-
-        return result;
-
-
     }
 }

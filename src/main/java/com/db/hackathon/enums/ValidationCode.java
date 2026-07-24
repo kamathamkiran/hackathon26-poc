@@ -1,4 +1,4 @@
-package com.db.hackathon.adk.agent.validation;
+package com.db.hackathon.enums;
 
 public enum ValidationCode {
 
@@ -10,6 +10,10 @@ public enum ValidationCode {
 
     INVALID_AMOUNT,
 
-    INVALID_CURRENCY
+    INVALID_CURRENCY,
+
+    OUT_OF_RANGE,
+
+    BUSINESS_RULE
 
 }

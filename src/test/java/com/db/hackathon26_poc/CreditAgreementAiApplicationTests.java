@@ -9,8 +9,4 @@ import org.springframework.test.context.ContextConfiguration;
 @ContextConfiguration(classes = CreditAgreementAiApplication.class)
 class CreditAgreementAiApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
-
 }

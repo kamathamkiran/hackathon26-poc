@@ -1,11 +1,8 @@
 package com.db.hackathon.controller;
 
-import com.db.hackathon.dto.WorkflowResponse;
-import com.db.hackathon.service.WorkflowService;
 import com.db.hackathon.subscribe.PdfUploadService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,19 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 public class WorkflowController {
 
-    private final WorkflowService workflowService;
     private final PdfUploadService pdfUploadService;
-
-    @PostMapping(
-            value = "/process",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-    )
-    public void process(
-            @RequestParam("filePath") String filePath) {
-
-        //return workflowService.process(filePath);
-        return;
-    }
 
     @PostMapping("/upload")
     public ResponseEntity<String> uploadPdf(
@@ -40,7 +25,7 @@ public class WorkflowController {
             @RequestParam("file") MultipartFile file) {
 
         try {
-            log.info("Input recieved {} {} {} ", uuid, username, file.getOriginalFilename());
+            log.info("Input received {} {} {} ", uuid, username, file.getOriginalFilename());
             String fileUrl = pdfUploadService.uploadPdf(uuid, username, file);
             return ResponseEntity.ok("File uploaded successfully: " + fileUrl);
 

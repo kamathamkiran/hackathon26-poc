@@ -6,5 +6,9 @@ public enum AgentType {
 
     EXTRACTION,
 
-    VALIDATION
+    VALIDATION,
+
+    REVIEW,
+
+    HUMAN_REVIEW
 }

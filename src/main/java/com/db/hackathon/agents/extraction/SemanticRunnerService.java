@@ -1,7 +1,8 @@
-package com.db.hackathon.adk.agent.extraction;
+package com.db.hackathon.agents.extraction;
 
-import com.db.hackathon.adk.prompt.PromptBuilder;
+import com.db.hackathon.agents.PromptBuilder;
 import com.db.hackathon.model.extraction.Deal;
+import com.db.hackathon.model.validation.ValidationResult;
 import com.google.adk.agents.RunConfig;
 import com.google.adk.artifacts.InMemoryArtifactService;
 import com.google.adk.events.Event;
@@ -70,6 +71,31 @@ public class SemanticRunnerService {
                 response,
                 Deal.class);
 
+    }
+
+    /** Runs a second-stage critic prompt through the configured ADK model. */
+    public String runPrompt(String prompt) throws Exception {
+        return clean(execute(prompt, createSession()));
+    }
+
+    /**
+     * Re-reads the source document and reconciles the previously extracted deal, returning an
+     * updated {@link Deal} with corrected value / confidence / pageNumber / sourceText where needed.
+     */
+    public Deal reviewAgreement(
+            DocumentAnalysis documentAnalysis,
+            String currentDealJson,
+            ValidationResult validationIssuesJson)
+            throws Exception {
+
+        String sessionId = createSession();
+
+        String prompt = promptBuilder.buildReviewPrompt(
+                documentAnalysis, currentDealJson, validationIssuesJson);
+
+        String response = clean(execute(prompt, sessionId));
+
+        return objectMapper.readValue(response, Deal.class);
     }
 
     private String execute(

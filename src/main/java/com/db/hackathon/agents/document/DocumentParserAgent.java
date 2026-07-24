@@ -1,13 +1,12 @@
-package com.db.hackathon.adk.agent.document;
+package com.db.hackathon.agents.document;
 
-import com.db.hackathon.adk.agent.WorkflowAgent;
+import com.db.hackathon.agents.WorkflowAgent;
 import com.db.hackathon.enums.AgentType;
 import com.db.hackathon.enums.WorkflowStatus;
 import com.db.hackathon.model.document.DocumentAnalysis;
 import com.db.hackathon.dto.WorkflowContext;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -24,11 +23,6 @@ public class DocumentParserAgent implements WorkflowAgent {
     @Override
     public AgentType getAgentType() {
         return AgentType.DOCUMENT_PARSER;
-    }
-
-    @Override
-    public WorkflowStatus getInputStatus() {
-        return WorkflowStatus.PARSING;
     }
 
     @Override

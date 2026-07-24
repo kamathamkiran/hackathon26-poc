@@ -1,6 +1,6 @@
-package com.db.hackathon.adk.agent.extraction;
+package com.db.hackathon.agents.extraction;
 
-import com.db.hackathon.adk.agent.WorkflowAgent;
+import com.db.hackathon.agents.WorkflowAgent;
 import com.db.hackathon.enums.AgentType;
 import com.db.hackathon.enums.WorkflowStatus;
 import com.db.hackathon.dto.WorkflowContext;
@@ -22,11 +22,6 @@ public class ExtractionAgent implements WorkflowAgent {
     }
 
     @Override
-    public WorkflowStatus getInputStatus() {
-        return WorkflowStatus.EXTRACTING;
-    }
-
-    @Override
     public WorkflowStatus getOutputStatus() {
         return WorkflowStatus.EXTRACTED;
     }
@@ -41,6 +36,7 @@ public class ExtractionAgent implements WorkflowAgent {
                         context.getDocumentAnalysis());
 
         context.setDeal(deal);
+        log.info("Extracted deal data: {}", deal);
 
         log.info("Agreement extraction completed");
 

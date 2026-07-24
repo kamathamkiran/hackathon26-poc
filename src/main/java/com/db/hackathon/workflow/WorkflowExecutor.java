@@ -1,9 +1,10 @@
 package com.db.hackathon.workflow;
 
-import com.db.hackathon.adk.agent.WorkflowAgent;
+import com.db.hackathon.agents.WorkflowAgent;
 import com.db.hackathon.dto.WorkflowContext;
 import com.db.hackathon.entity.WorkflowEntity;
 import com.db.hackathon.entity.WorkflowEventEntity;
+import com.db.hackathon.enums.AgentType;
 import com.db.hackathon.enums.WorkflowStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,17 +43,20 @@ public class WorkflowExecutor {
                     agent.getAgentType(),
                     agent.getOutput(context));
 
-            workflowManager.completeEvent(
-                    event,
-                    System.currentTimeMillis() - startTime);
+            boolean trackEvent = agent.getAgentType() != AgentType.HUMAN_REVIEW;
+
+            if(trackEvent) {
+                workflowManager.completeEvent(
+                        event,
+                        System.currentTimeMillis() - startTime);
+            }
 
             log.info("{} completed successfully for workflow {}",
                     agent.getAgentType(),
                     workflow.getWorkflowId());
 
-            if (workflow.getStatus() == WorkflowStatus.VALIDATED) {
-                workflowManager.markCompleted(workflow);
-                log.info("Workflow {} marked COMPLETED.", workflow.getWorkflowId());
+            if (workflow.getStatus() == WorkflowStatus.HUMAN_REVIEW_PENDING) {
+                log.info("Workflow {} is awaiting human review.", workflow.getWorkflowId());
             }
 
         } catch (Exception ex) {
