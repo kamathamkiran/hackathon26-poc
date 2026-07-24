@@ -71,8 +71,6 @@ public class ValidationService {
         applySection(rules.section("dealAdminServicingGroup"),
                 deal.getDealAdminAgent() == null ? null : deal.getDealAdminAgent().getDealAdminServicingGroup(),
                 "dealAdminAgent.dealAdminServicingGroup.", errors, warnings);
-        applySection(rules.section("dealBorrower"), deal.getDealBorrower(),
-                "dealBorrower.", errors, warnings);
 
         List<InterestPricingOption> options = deal.getInterestPricingOptions();
         if (options != null) {

@@ -10,17 +10,15 @@
       { "field": "branch", "label": "Branch", "type": "STRING", "maxLength": 40 },
       { "field": "processingAreaCode", "label": "Processing Area Code", "type": "STRING", "maxLength": 20 },
       { "field": "classification", "label": "Classification", "type": "STRING", "maxLength": 40 },
-      { "field": "expenseCode", "label": "Expense Code", "type": "STRING", "maxLength": 20 }
+      { "field": "expenseCode", "label": "Expense Code", "type": "STRING", "maxLength": 20 },
+      { "field": "dealBorrower", "label": "Borrower", "mandatory": true, "type": "STRING", "maxLength": 15 },
+      { "field": "borrowerIndicator", "label": "Borrower Indicator", "type": "STRING", "maxLength": 5 }
     ],
     "dealAdminAgent": [
       { "field": "customerExternalId", "label": "Admin Agent", "type": "STRING", "maxLength": 15 }
     ],
     "dealAdminServicingGroup": [
       { "field": "profileType", "label": "Servicing Group Profile Type", "type": "STRING", "maxLength": 30 }
-    ],
-    "dealBorrower": [
-      { "field": "customerExternalId", "label": "Borrower", "mandatory": true, "type": "STRING", "maxLength": 15 },
-      { "field": "borrowerIndicator", "label": "Borrower Indicator", "type": "STRING", "maxLength": 5 }
     ],
     "interestPricingOption": [
       { "field": "pricingOption", "label": "Interest Pricing Option", "type": "STRING", "maxLength": 30 }

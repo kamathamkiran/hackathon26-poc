@@ -35,7 +35,9 @@ public class Deal {
 
     private DealAdminAgent dealAdminAgent;
 
-    private DealBorrower dealBorrower;
+    private ExtractedField dealBorrower;
+
+    private ExtractedField borrowerIndicator;
 
     private List<InterestPricingOption> interestPricingOptions;
 

@@ -40,7 +40,10 @@ GENERAL RULES
 
 17. Preserve capitalization where possible.
 
-18. pageNumber must be the page where the information was found.
+18. pageNumber must be the page where the information was found. The DOCUMENT TEXT is split into
+pages by markers of the form "===== PAGE N =====". Set pageNumber to the N of the page block that
+contains the supporting sourceText. Never default pageNumber to 1 - only use 1 when the sourceText
+actually appears under the "===== PAGE 1 =====" marker.
 
 19. sourceText must contain only the shortest supporting phrase or sentence.
 
@@ -88,7 +91,7 @@ summarize the legal meaning in one or two concise sentences.
 
   A leaf field must NEVER be an empty object {}, an empty string "", or [].
 
-- Nested objects (for example: dealAdminAgent, dealAdminServicingGroup, dealBorrower,
+- Nested objects (for example: dealAdminAgent, dealAdminServicingGroup,
   risk, loanPurpose) MUST always be present as objects containing their inner fields.
   When nothing is found, still return the object with its inner leaves set to null.
 

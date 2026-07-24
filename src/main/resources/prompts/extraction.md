@@ -1,5 +1,13 @@
 Analyze the attached Credit Agreement and extract the information into the following JSON schema.
 
+PAGE NUMBER RULES:
+
+• The DOCUMENT TEXT is divided into pages by markers of the form "===== PAGE N =====".
+• For every extracted field, set "pageNumber" to the N of the page block where that value's
+  sourceText actually appears.
+• Do NOT default pageNumber to 1. Only use 1 when the value truly comes from page 1.
+• If a leaf field is null, there is no pageNumber to set (the whole leaf is null).
+
 Every extracted (leaf) field MUST be represented using the ExtractedField structure:
 
 {
@@ -20,7 +28,7 @@ STRICT NULL & STRUCTURE RULES:
 
 A leaf field must NEVER be {}, "", or [].
 
-• Nested objects (dealAdminAgent, dealAdminServicingGroup, dealBorrower, risk, loanPurpose)
+• Nested objects (dealAdminAgent, dealAdminServicingGroup, risk, loanPurpose)
   MUST always be present as objects with their inner fields. When nothing is found, still return
   the object with its inner leaves set to null.
 
@@ -62,10 +70,8 @@ The JSON schema is:
 }
 },
 
-"dealBorrower": {
-"customerExternalId": ExtractedField,
-"borrowerIndicator": ExtractedField
-},
+"dealBorrower": ExtractedField,
+"borrowerIndicator": ExtractedField,
 
 "interestPricingOptions":[
 {

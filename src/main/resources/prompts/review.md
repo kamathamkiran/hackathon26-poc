@@ -23,7 +23,9 @@ leaf field, which has the shape:
 - Verify `value` against the document text.
 - If the value is wrong, correct it to what the document actually says.
 - Update `sourceText` to the exact snippet from the document that supports the value.
-- Update `pageNumber` to the page the snippet came from (1-based).
+- Update `pageNumber` to the page the snippet came from (1-based). The DOCUMENT TEXT is divided
+  into pages by markers "===== PAGE N =====". Set `pageNumber` to the N of the page block where
+  the `sourceText` appears. Do NOT default to 1; only use 1 when the snippet is truly on page 1.
 - Update `confidence` to any real number between 0.0 and 1.0 based purely on your own judgement
   of how well the document supports the value. Use the full continuous range - do not snap to
   fixed buckets.
@@ -67,7 +69,7 @@ issues are deliberately excluded. For each issue:
 - A **leaf field** is either the ExtractedField object
   `{ "value": ..., "pageNumber": ..., "confidence": ..., "sourceText": ... }` when a value is
   found, or a bare `null` when it is not. It must NEVER be `{}`, `""`, or `[]`.
-- **Nested objects** (for example `dealAdminAgent`, `dealAdminServicingGroup`, `dealBorrower`,
+- **Nested objects** (for example `dealAdminAgent`, `dealAdminServicingGroup`,
   `risk`, `loanPurpose`) MUST stay as objects with their inner fields. Even when everything inside
   is empty, keep the object and set its inner leaves to `null`. A nested object must NEVER become a
   bare `null`, `[]`, or carry a `value` property of its own.

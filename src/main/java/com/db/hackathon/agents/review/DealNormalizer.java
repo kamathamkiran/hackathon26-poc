@@ -3,7 +3,6 @@ package com.db.hackathon.agents.review;
 import com.db.hackathon.model.extraction.Deal;
 import com.db.hackathon.model.extraction.DealAdminAgent;
 import com.db.hackathon.model.extraction.DealAdminServicingGroup;
-import com.db.hackathon.model.extraction.DealBorrower;
 import com.db.hackathon.model.extraction.Facility;
 import com.db.hackathon.model.extraction.FacilityInterestPricing;
 import com.db.hackathon.model.extraction.InterestPricingOption;
@@ -33,9 +32,6 @@ public class DealNormalizer {
             deal.getDealAdminAgent().setDealAdminServicingGroup(new DealAdminServicingGroup());
         }
 
-        if (deal.getDealBorrower() == null) {
-            deal.setDealBorrower(new DealBorrower());
-        }
 
         deal.setInterestPricingOptions(
                 seedIfEmpty(deal.getInterestPricingOptions(), InterestPricingOption::new));
