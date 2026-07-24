@@ -1,4 +1,4 @@
-package com.db.hackathon.adk.agent.review;
+package com.db.hackathon.agents.review;
 
 import com.db.hackathon.model.extraction.Deal;
 import com.db.hackathon.model.extraction.DealAdminAgent;

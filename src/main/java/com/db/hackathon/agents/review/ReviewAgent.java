@@ -1,7 +1,7 @@
-package com.db.hackathon.adk.agent.review;
+package com.db.hackathon.agents.review;
 
-import com.db.hackathon.adk.agent.WorkflowAgent;
-import com.db.hackathon.adk.agent.extraction.SemanticRunnerService;
+import com.db.hackathon.agents.WorkflowAgent;
+import com.db.hackathon.agents.extraction.SemanticRunnerService;
 import com.db.hackathon.dto.ExtractionResponse;
 import com.db.hackathon.dto.WorkflowContext;
 import com.db.hackathon.enums.AgentType;
@@ -62,7 +62,8 @@ public class ReviewAgent implements WorkflowAgent {
             return;
         }
 
-        Deal reviewed = runnerService.reviewAgreement(context.getDocumentAnalysis(), originalJson);
+        Deal reviewed = runnerService.reviewAgreement(
+                context.getDocumentAnalysis(), originalJson, context.getValidationResult());
         reviewed = dealNormalizer.normalize(reviewed);
         context.setDeal(reviewed);
 

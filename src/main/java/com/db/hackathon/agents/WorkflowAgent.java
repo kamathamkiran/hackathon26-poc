@@ -1,4 +1,4 @@
-package com.db.hackathon.adk.agent;
+package com.db.hackathon.agents;
 
 import com.db.hackathon.enums.AgentType;
 import com.db.hackathon.enums.WorkflowStatus;

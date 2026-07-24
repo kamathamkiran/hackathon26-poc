@@ -1,7 +1,8 @@
-package com.db.hackathon.adk.agent.extraction;
+package com.db.hackathon.agents.extraction;
 
-import com.db.hackathon.adk.prompt.PromptBuilder;
+import com.db.hackathon.agents.PromptBuilder;
 import com.db.hackathon.model.extraction.Deal;
+import com.db.hackathon.model.validation.ValidationResult;
 import com.google.adk.agents.RunConfig;
 import com.google.adk.artifacts.InMemoryArtifactService;
 import com.google.adk.events.Event;
@@ -83,12 +84,14 @@ public class SemanticRunnerService {
      */
     public Deal reviewAgreement(
             DocumentAnalysis documentAnalysis,
-            String currentDealJson)
+            String currentDealJson,
+            ValidationResult validationIssuesJson)
             throws Exception {
 
         String sessionId = createSession();
 
-        String prompt = promptBuilder.buildReviewPrompt(documentAnalysis, currentDealJson);
+        String prompt = promptBuilder.buildReviewPrompt(
+                documentAnalysis, currentDealJson, validationIssuesJson);
 
         String response = clean(execute(prompt, sessionId));
 

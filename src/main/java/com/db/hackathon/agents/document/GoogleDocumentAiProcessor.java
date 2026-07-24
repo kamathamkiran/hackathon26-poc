@@ -1,4 +1,4 @@
-package com.db.hackathon.adk.agent.document;
+package com.db.hackathon.agents.document;
 
 import com.db.hackathon.config.DocumentAiProperties;
 import com.db.hackathon.model.document.DocumentAnalysis;

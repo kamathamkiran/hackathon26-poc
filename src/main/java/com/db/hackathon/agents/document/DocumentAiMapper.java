@@ -1,4 +1,4 @@
-package com.db.hackathon.adk.agent.document;
+package com.db.hackathon.agents.document;
 
 import com.google.cloud.documentai.v1.Document;
 import com.google.cloud.documentai.v1.Document.Page;

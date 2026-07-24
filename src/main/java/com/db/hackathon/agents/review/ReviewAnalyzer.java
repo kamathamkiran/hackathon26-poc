@@ -1,4 +1,4 @@
-package com.db.hackathon.adk.agent.review;
+package com.db.hackathon.agents.review;
 
 import com.db.hackathon.model.review.ReviewIssue;
 import com.fasterxml.jackson.databind.JsonNode;

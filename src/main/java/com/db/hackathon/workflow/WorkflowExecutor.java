@@ -1,6 +1,6 @@
 package com.db.hackathon.workflow;
 
-import com.db.hackathon.adk.agent.WorkflowAgent;
+import com.db.hackathon.agents.WorkflowAgent;
 import com.db.hackathon.dto.WorkflowContext;
 import com.db.hackathon.entity.WorkflowEntity;
 import com.db.hackathon.entity.WorkflowEventEntity;

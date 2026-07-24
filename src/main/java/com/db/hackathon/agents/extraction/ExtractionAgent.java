@@ -1,6 +1,6 @@
-package com.db.hackathon.adk.agent.extraction;
+package com.db.hackathon.agents.extraction;
 
-import com.db.hackathon.adk.agent.WorkflowAgent;
+import com.db.hackathon.agents.WorkflowAgent;
 import com.db.hackathon.enums.AgentType;
 import com.db.hackathon.enums.WorkflowStatus;
 import com.db.hackathon.dto.WorkflowContext;

@@ -1,10 +1,10 @@
 package com.db.hackathon.workflow;
 
-import com.db.hackathon.adk.agent.document.DocumentParserAgent;
-import com.db.hackathon.adk.agent.extraction.ExtractionAgent;
-import com.db.hackathon.adk.agent.HumanReviewAgent;
-import com.db.hackathon.adk.agent.review.ReviewAgent;
-import com.db.hackathon.adk.agent.validation.ValidationAgent;
+import com.db.hackathon.agents.document.DocumentParserAgent;
+import com.db.hackathon.agents.extraction.ExtractionAgent;
+import com.db.hackathon.agents.HumanReviewAgent;
+import com.db.hackathon.agents.review.ReviewAgent;
+import com.db.hackathon.agents.validation.ValidationAgent;
 import com.db.hackathon.dto.WorkflowContext;
 import com.db.hackathon.entity.WorkflowEntity;
 import lombok.RequiredArgsConstructor;

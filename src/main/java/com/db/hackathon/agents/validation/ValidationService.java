@@ -1,4 +1,4 @@
-package com.db.hackathon.adk.agent.validation;
+package com.db.hackathon.agents.validation;
 
 import com.db.hackathon.enums.ValidationCode;
 import com.db.hackathon.model.extraction.Deal;

@@ -1,4 +1,4 @@
-package com.db.hackathon.adk.agent.validation;
+package com.db.hackathon.agents.validation;
 
 import com.db.hackathon.model.validation.ValidationRuleSet;
 import com.fasterxml.jackson.databind.ObjectMapper;
