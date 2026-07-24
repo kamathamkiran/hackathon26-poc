@@ -38,13 +38,15 @@ public class ValidationAgent
     public void process(
             WorkflowContext context) throws Exception {
 
-        log.info("Starting validation");
+        String workflowId = context.getWorkflow().getWorkflowId();
+        log.info("Starting validation for workflowId={}", workflowId);
 
         ValidationResult result = validate(context.getDeal());
 
         context.setValidationResult(result);
 
-        log.info("Validation completed");
+        int errorCount = result.getErrors() == null ? 0 : result.getErrors().size();
+        log.info("Validation completed for workflowId={}: {} error(s)", workflowId, errorCount);
 
     }
 
