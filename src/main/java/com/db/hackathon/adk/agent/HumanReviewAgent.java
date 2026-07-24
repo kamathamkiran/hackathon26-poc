@@ -1,49 +1,36 @@
-package com.db.hackathon.adk.agent.validation;
+package com.db.hackathon.adk.agent;
 
-import com.db.hackathon.adk.agent.WorkflowAgent;
 import com.db.hackathon.dto.ExtractionResponse;
+import com.db.hackathon.dto.WorkflowContext;
 import com.db.hackathon.enums.AgentType;
 import com.db.hackathon.enums.WorkflowStatus;
 import com.db.hackathon.model.validation.ValidationIssue;
 import com.db.hackathon.model.validation.ValidationResult;
-import com.db.hackathon.dto.WorkflowContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
-@Slf4j
-public class ValidationAgent
-        implements WorkflowAgent {
-
-    private final ValidationService validationService;
+public class HumanReviewAgent implements WorkflowAgent {
 
     @Override
     public AgentType getAgentType() {
-        return AgentType.VALIDATION;
+        return AgentType.HUMAN_REVIEW;
     }
 
     @Override
     public WorkflowStatus getOutputStatus() {
-        return WorkflowStatus.VALIDATED;
+        return WorkflowStatus.HUMAN_REVIEW_PENDING;
     }
 
     @Override
-    public void process(
-            WorkflowContext context) throws Exception {
-
-        log.info("Starting validation");
-
-        ValidationResult result = validationService.validate(context.getDeal());
-
-        context.setValidationResult(result);
-
-        log.info("Validation completed: {} error(s), {} warning(s)",
-                result.getErrors() == null ? 0 : result.getErrors().size(),
-                result.getWarnings() == null ? 0 : result.getWarnings().size());
+    public void process(WorkflowContext context) {
+        log.info("Assembling final AI response for workflow {} and parking at HUMAN_REVIEW_PENDING",
+                context.getWorkflow().getWorkflowId());
     }
 
     @Override
@@ -56,6 +43,8 @@ public class ValidationAgent
                 .workflowId(context.getWorkflow().getWorkflowId())
                 .deal(context.getDeal())
                 .validationIssues(issues)
+                .reviewIssues(context.getReviewIssues() == null ? List.of() : context.getReviewIssues())
+                .overallConfidence(context.getOverallConfidence())
                 .build();
     }
 }

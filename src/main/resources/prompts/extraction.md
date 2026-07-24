@@ -1,6 +1,6 @@
 Analyze the attached Credit Agreement and extract the information into the following JSON schema.
 
-Every extracted field MUST be represented using:
+Every extracted (leaf) field MUST be represented using the ExtractedField structure:
 
 {
 "value":"USD 100,000,000",
@@ -9,26 +9,34 @@ Every extracted field MUST be represented using:
 "sourceText":"US$100,000,000"
 }
 
-or 
+STRICT NULL & STRUCTURE RULES:
 
-null for not able to extract fields.
+• Every field in the schema MUST always be present. Never omit a field.
 
-If a value is not explicitly stated:
+• A leaf field is either the ExtractedField object (when a value is found) or a bare null
+  (when the value cannot be found). When not found, set the leaf directly to null:
 
-• Return null for optional objects.
+"dealName": null
 
-Example:
+A leaf field must NEVER be {}, "", or [].
 
-"loanPurpose": null
+• Nested objects (dealAdminAgent, dealAdminServicingGroup, dealBorrower, risk, loanPurpose)
+  MUST always be present as objects with their inner fields. When nothing is found, still return
+  the object with its inner leaves set to null.
 
-• For ExtractedField values return:
+Correct:
 
-{
-"value":"",
-"pageNumber":0,
-"confidence":0.0,
-"sourceText":""
+"loanPurpose":{
+"loanPurposeCode": null
 }
+
+WRONG: "loanPurpose": null
+WRONG: "loanPurpose": []
+
+A nested object must NEVER be null and NEVER be [].
+
+• Arrays (interestPricingOptions, facilityList, facilityInterestPricingList) MUST always be arrays.
+  Return an empty array [] only when no such items exist. An array must NEVER be null.
 
 Do NOT invent values.
 

@@ -27,11 +27,6 @@ public class DocumentParserAgent implements WorkflowAgent {
     }
 
     @Override
-    public WorkflowStatus getInputStatus() {
-        return WorkflowStatus.PARSING;
-    }
-
-    @Override
     public WorkflowStatus getOutputStatus() {
         return WorkflowStatus.PARSED;
     }

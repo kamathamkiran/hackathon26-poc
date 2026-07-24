@@ -12,7 +12,7 @@ GENERAL RULES
 
 3. Never use external knowledge.
 
-4. If information cannot be found, return null for that field.
+4. If information cannot be found, set the "value" of that ExtractedField to null (see the NULL & STRUCTURE RULES below). Never drop the field.
 
 5. Return ONLY valid JSON.
 
@@ -48,17 +48,10 @@ GENERAL RULES
 
 21. confidence represents how confident you are that the extracted value exactly matches the supporting sourceText.
 
-Use:
-
-1.0 = Explicitly stated
-
-0.9 = Explicit but requires minor interpretation
-
-0.8 = Explicit but spread across nearby text
-
-0.5 = Partially supported
-
-0.0 = Value not found
+Assign confidence yourself as any real number between 0.0 and 1.0 based purely on your own
+judgement of the evidence. Higher when the document states the value clearly and unambiguously;
+lower when it is implied, spread across text, or requires interpretation. Do not snap to fixed
+buckets - use the full continuous range.
 
 22. For long legal clauses such as:
 - Covenants
@@ -76,23 +69,51 @@ summarize the legal meaning in one or two concise sentences.
 
 24. If multiple pricing options exist, return one object for each pricing option.
 
-25. If an optional object cannot be found, return null.
+25. NULL & STRUCTURE RULES (STRICT — follow exactly):
 
-Example:
+- Every field defined in the schema MUST always be present. Never omit a field.
 
-"loanPurpose": null
+- A leaf field is either the ExtractedField object when a value is found:
 
-NOT
+  {
+  "value": "USD 100,000,000",
+  "pageNumber": 5,
+  "confidence": 1.0,
+  "sourceText": "US$100,000,000"
+  }
 
-"loanPurpose":{
-"loanPurposeCode":null
-}
+  or a bare null when the value cannot be found:
 
-26. Arrays should never be null.
+  "dealName": null
 
-Return an empty array if nothing is found.
+  A leaf field must NEVER be an empty object {}, an empty string "", or [].
 
-27. Every extracted value must use the ExtractedField structure.
+- Nested objects (for example: dealAdminAgent, dealAdminServicingGroup, dealBorrower,
+  risk, loanPurpose) MUST always be present as objects containing their inner fields.
+  When nothing is found, still return the object with its inner leaves set to null.
+
+  Correct:
+
+  "loanPurpose": {
+  "loanPurposeCode": null
+  }
+
+  WRONG:
+
+  "loanPurpose": null
+
+  WRONG:
+
+  "loanPurpose": []
+
+  A nested object must NEVER be null and NEVER be [].
+
+26. Arrays (for example: interestPricingOptions, facilityList, facilityInterestPricingList)
+   MUST always be arrays. Return an empty array [] only when the document contains no such
+   items. Every array element MUST be a fully-structured object following the schema
+   (with its own leaf fields set to null when not found). An array must NEVER be null.
+
+27. Every found value must use the ExtractedField structure.
 
 Example:
 
@@ -106,3 +127,4 @@ Example:
 28. Do not perform business validation.
 
 Only extract information.
+

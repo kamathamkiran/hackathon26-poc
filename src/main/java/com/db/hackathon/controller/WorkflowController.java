@@ -1,12 +1,8 @@
 package com.db.hackathon.controller;
 
-import com.db.hackathon.dto.WorkflowResponse;
-import com.db.hackathon.service.WorkflowService;
 import com.db.hackathon.subscribe.PdfUploadService;
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,18 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 public class WorkflowController {
 
-    private final WorkflowService workflowService;
     private final PdfUploadService pdfUploadService;
-
-    @PostMapping(
-            value = "/process",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-    )
-    public WorkflowResponse process(
-            @RequestParam("filePath") JsonNode metadata) {
-
-        return workflowService.process(metadata);
-    }
 
     @PostMapping("/upload")
     public ResponseEntity<String> uploadPdf(

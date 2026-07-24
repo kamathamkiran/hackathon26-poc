@@ -30,16 +30,13 @@ public class WorkflowEntity {
     @Column(name = "next_agent")
     private AgentType nextAgent;
 
-    @Lob
-    @Column(name = "metadata")
+    @Column(name = "metadata", columnDefinition = "text")
     private String metadata;
 
-    @Lob
-    @Column(name="human_output")
+    @Column(name = "human_output", columnDefinition = "text")
     private String humanJson;
 
-    @Lob
-    @Column(name = "failure_reason")
+    @Column(name = "failure_reason", columnDefinition = "text")
     private String failureReason;
 
     @Column(nullable = false, updatable = false)

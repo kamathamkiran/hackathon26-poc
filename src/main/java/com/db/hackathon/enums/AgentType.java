@@ -8,7 +8,7 @@ public enum AgentType {
 
     VALIDATION,
 
-    DEAL_DATA_VERIFIER,
+    REVIEW,
 
-    CREDIT_AGREEMENT_VERIFIER
+    HUMAN_REVIEW
 }

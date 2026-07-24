@@ -19,8 +19,9 @@ public class PromptLoader {
 
             case VALIDATION -> "validation.md";
 
-            case DEAL_DATA_VERIFIER -> null;
-            case CREDIT_AGREEMENT_VERIFIER -> null;
+            case REVIEW -> "review.md";
+
+            case HUMAN_REVIEW -> null;
         };
 
         try {

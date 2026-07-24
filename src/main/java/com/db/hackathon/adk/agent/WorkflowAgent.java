@@ -8,8 +8,6 @@ public interface WorkflowAgent {
 
     AgentType getAgentType();
 
-    WorkflowStatus getInputStatus();
-
     WorkflowStatus getOutputStatus();
 
     void process(WorkflowContext context) throws Exception;

@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Data
 @Builder
@@ -16,5 +17,17 @@ public class ValidationResult {
 
     private boolean valid;
 
-    private List<ValidationError> errors;
+    @Builder.Default
+    private List<ValidationIssue> errors = new ArrayList<>();
+
+    @Builder.Default
+    private List<ValidationIssue> warnings = new ArrayList<>();
+
+    /** Convenience view combining errors and warnings for the UI/human review. */
+    public List<ValidationIssue> allIssues() {
+        return Stream.concat(
+                        errors == null ? Stream.empty() : errors.stream(),
+                        warnings == null ? Stream.empty() : warnings.stream())
+                .toList();
+    }
 }

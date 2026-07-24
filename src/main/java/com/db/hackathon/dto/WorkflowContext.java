@@ -3,11 +3,12 @@ package com.db.hackathon.dto;
 import com.db.hackathon.entity.WorkflowEntity;
 import com.db.hackathon.model.document.DocumentAnalysis;
 import com.db.hackathon.model.extraction.Deal;
+import com.db.hackathon.model.review.ReviewIssue;
 import com.db.hackathon.model.validation.ValidationResult;
-import com.db.hackathon.model.verification.CreditAgreementVerificationResult;
-import com.db.hackathon.model.verification.DealDataVerificationResult;
 import lombok.Builder;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 @Builder
@@ -25,9 +26,9 @@ public class WorkflowContext {
 
     private ValidationResult validationResult;
 
+    private List<ReviewIssue> reviewIssues;
+
+    private Double overallConfidence;
+
     private String dealDataJson;
-
-    private DealDataVerificationResult dealDataVerificationResult;
-
-    private CreditAgreementVerificationResult creditAgreementVerificationResult;
 }

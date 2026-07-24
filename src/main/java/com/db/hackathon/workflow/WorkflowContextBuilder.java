@@ -1,5 +1,6 @@
 package com.db.hackathon.workflow;
 
+import com.db.hackathon.dto.ExtractionResponse;
 import com.db.hackathon.dto.WorkflowContext;
 import com.db.hackathon.entity.WorkflowEntity;
 import com.db.hackathon.model.document.DocumentAnalysis;
@@ -55,6 +56,18 @@ public class WorkflowContextBuilder {
                                 Deal.class);
 
                 context.setDeal(deal);
+            }
+
+            case VALIDATED, REVIEWED -> {
+
+                ExtractionResponse response =
+                        jsonSerializer.deserialize(
+                                workflow.getMetadata(),
+                                ExtractionResponse.class);
+
+                context.setDeal(response.getDeal());
+                context.setReviewIssues(response.getReviewIssues());
+                context.setOverallConfidence(response.getOverallConfidence());
             }
 
             default -> {

@@ -1,6 +1,6 @@
 package com.db.hackathon.model.validation;
 
-import com.db.hackathon.adk.agent.validation.ValidationCode;
+import com.db.hackathon.enums.ValidationCode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,11 +10,13 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ValidationMessage {
+public class ValidationIssue {
 
     private String field;
 
     private ValidationCode code;
+
+    private ValidationSeverity severity;
 
     private String message;
 

@@ -22,11 +22,6 @@ public class ExtractionAgent implements WorkflowAgent {
     }
 
     @Override
-    public WorkflowStatus getInputStatus() {
-        return WorkflowStatus.EXTRACTING;
-    }
-
-    @Override
     public WorkflowStatus getOutputStatus() {
         return WorkflowStatus.EXTRACTED;
     }

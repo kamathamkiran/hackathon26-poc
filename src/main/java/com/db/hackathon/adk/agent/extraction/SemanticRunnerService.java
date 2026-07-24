@@ -77,6 +77,24 @@ public class SemanticRunnerService {
         return clean(execute(prompt, createSession()));
     }
 
+    /**
+     * Re-reads the source document and reconciles the previously extracted deal, returning an
+     * updated {@link Deal} with corrected value / confidence / pageNumber / sourceText where needed.
+     */
+    public Deal reviewAgreement(
+            DocumentAnalysis documentAnalysis,
+            String currentDealJson)
+            throws Exception {
+
+        String sessionId = createSession();
+
+        String prompt = promptBuilder.buildReviewPrompt(documentAnalysis, currentDealJson);
+
+        String response = clean(execute(prompt, sessionId));
+
+        return objectMapper.readValue(response, Deal.class);
+    }
+
     private String execute(
             String prompt,
             String sessionId)

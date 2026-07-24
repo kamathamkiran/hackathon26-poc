@@ -1,0 +1,54 @@
+{
+  "lowConfidenceThreshold": 0.70,
+  "sections": {
+    "deal": [
+      { "field": "dealName", "label": "Deal Name", "mandatory": true, "type": "STRING", "maxLength": 40 },
+      { "field": "currency", "label": "Currency", "mandatory": true, "type": "CURRENCY", "allowedValues": ["USD", "EUR", "GBP", "HKD"] },
+      { "field": "agreementDate", "label": "Agreement Date", "mandatory": true, "type": "DATE" },
+      { "field": "globalDealProposedCommitmentAmount", "label": "Global Proposed Commitment", "type": "AMOUNT", "positive": true },
+      { "field": "department", "label": "Department", "type": "STRING", "maxLength": 40 },
+      { "field": "branch", "label": "Branch", "type": "STRING", "maxLength": 40 },
+      { "field": "processingAreaCode", "label": "Processing Area Code", "type": "STRING", "maxLength": 20 },
+      { "field": "classification", "label": "Classification", "type": "STRING", "maxLength": 40 },
+      { "field": "expenseCode", "label": "Expense Code", "type": "STRING", "maxLength": 20 }
+    ],
+    "dealAdminAgent": [
+      { "field": "customerExternalId", "label": "Admin Agent", "type": "STRING", "maxLength": 15 }
+    ],
+    "dealAdminServicingGroup": [
+      { "field": "profileType", "label": "Servicing Group Profile Type", "type": "STRING", "maxLength": 30 }
+    ],
+    "dealBorrower": [
+      { "field": "customerExternalId", "label": "Borrower", "mandatory": true, "type": "STRING", "maxLength": 15 },
+      { "field": "borrowerIndicator", "label": "Borrower Indicator", "type": "STRING", "maxLength": 5 }
+    ],
+    "interestPricingOption": [
+      { "field": "pricingOption", "label": "Interest Pricing Option", "type": "STRING", "maxLength": 30 }
+    ],
+    "facility": [
+      { "field": "facilityName", "label": "Facility Name", "mandatory": true, "type": "STRING", "maxLength": 30 },
+      { "field": "facilityType", "label": "Facility Type", "mandatory": true, "type": "STRING", "maxLength": 30 },
+      { "field": "proposedCommitmentAmount", "label": "Proposed Commitment", "mandatory": true, "type": "AMOUNT", "positive": true },
+      { "field": "closingCommitment", "label": "Closing Commitment", "type": "AMOUNT", "nonNegative": true },
+      { "field": "dealTrackingNumber", "label": "Deal Tracking Number", "type": "STRING", "maxLength": 12 },
+      { "field": "agreementDate", "label": "Facility Agreement Date", "type": "DATE" },
+      { "field": "effectiveDate", "label": "Effective Date", "type": "DATE" },
+      { "field": "expiryDate", "label": "Expiry Date", "type": "DATE" },
+      { "field": "finalMaturityDate", "label": "Final Maturity Date", "type": "DATE" },
+      { "field": "facilitySublimit", "label": "Facility Sublimit", "type": "AMOUNT", "nonNegative": true },
+      { "field": "globalNewAmount", "label": "Global New Amount", "type": "AMOUNT", "nonNegative": true }
+    ],
+    "risk": [
+      { "field": "riskTypeCode", "label": "Risk Type Code", "type": "STRING", "maxLength": 10 }
+    ],
+    "loanPurpose": [
+      { "field": "loanPurposeCode", "label": "Loan Purpose Code", "type": "STRING", "maxLength": 60 }
+    ],
+    "pricing": [
+      { "field": "optionName", "label": "Pricing Option Name", "type": "STRING", "maxLength": 30 },
+      { "field": "rateBasis", "label": "Rate Basis", "type": "STRING", "maxLength": 20 },
+      { "field": "baseRate", "label": "Base Rate", "type": "STRING", "maxLength": 20 },
+      { "field": "spread", "label": "Spread", "type": "AMOUNT", "nonNegative": true }
+    ]
+  }
+}
