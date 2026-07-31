@@ -1,12 +1,62 @@
-Analyze the attached Credit Agreement and extract the information into the following JSON schema.
+Analyze the attached Credit Agreement.
 
-PAGE NUMBER RULES:
+The document is provided as a JSON list of pages. Each element has:
+- "page": the page number (integer)
+- "content": the full text of that page
 
-• The DOCUMENT TEXT is divided into pages by markers of the form "===== PAGE N =====".
-• For every extracted field, set "pageNumber" to the N of the page block where that value's
-  sourceText actually appears.
-• Do NOT default pageNumber to 1. Only use 1 when the value truly comes from page 1.
-• If a leaf field is null, there is no pageNumber to set (the whole leaf is null).
+Example input:
+
+[
+  { "pageNumber": 1, "text": "John Doe..." },
+  { "pageNumber": 2, "text": "Policy Number ABC123..." },
+  { "pageNumber": 3, "text": "Address Bangalore..." }
+]
+
+For EVERY extracted field, follow this procedure exactly:
+
+1. Iterate through each page in the list, in order.
+2. Find the page whose "content" contains the supporting text for the field.
+3. Record that page's "page" number.
+4. Extract the value from that supporting text.
+5. Set pageNumber to the recorded "page" number, exactly as provided in the input.
+
+Rules:
+
+- Never guess or invent the page number.
+- Return the page number EXACTLY as given in the input list.
+- If the value appears on multiple pages, return the FIRST occurrence.
+- The pageNumber and sourceText MUST always correspond to the same page.
+
+Return ONLY valid JSON.
+
+Every extracted leaf field must use:
+
+{
+"value":"",
+"pageNumber":0,
+"confidence":0.0,
+"sourceText":""
+}
+
+When a value cannot be found:
+
+Return null.
+
+Do NOT invent values.
+
+Do NOT infer values.
+
+Do NOT estimate values.
+
+Return every schema field.
+
+Never omit fields.
+
+Nested objects must always exist.
+
+Arrays must always be arrays.
+
+Extract the information into the following JSON schema.
 
 Every extracted (leaf) field MUST be represented using the ExtractedField structure:
 

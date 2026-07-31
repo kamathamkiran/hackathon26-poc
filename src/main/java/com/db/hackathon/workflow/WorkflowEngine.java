@@ -25,7 +25,7 @@ public class WorkflowEngine {
     private final ReviewAgent reviewAgent;
     private final HumanReviewAgent humanReviewAgent;
 
-    public WorkflowContext execute(WorkflowEntity workflow) {
+    public void execute(WorkflowEntity workflow) {
 
         WorkflowContext context = contextBuilder.build(workflow);
 
@@ -68,7 +68,6 @@ public class WorkflowEngine {
             log.error("Error executing workflow: {}", workflow.getWorkflowId(), e);
         }
 
-        return context;
     }
 
 

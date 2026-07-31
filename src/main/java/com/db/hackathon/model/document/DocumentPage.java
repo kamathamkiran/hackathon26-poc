@@ -15,6 +15,4 @@ public class DocumentPage {
 
     private String text;
 
-    private Boolean blankPage;
-
 }

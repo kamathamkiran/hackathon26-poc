@@ -26,6 +26,7 @@ public class ReviewAgent implements WorkflowAgent {
     private final JsonSerializerService jsonSerializer;
     private final ReviewAnalyzer reviewAnalyzer;
     private final DealNormalizer dealNormalizer;
+    private final com.db.hackathon.agents.extraction.PageNumberResolver pageNumberResolver;
 
     @Override
     public AgentType getAgentType() {
@@ -65,6 +66,8 @@ public class ReviewAgent implements WorkflowAgent {
         Deal reviewed = runnerService.reviewAgreement(
                 context.getDocumentAnalysis(), originalJson, context.getValidationResult());
         reviewed = dealNormalizer.normalize(reviewed);
+        // Deterministically resolve page numbers from sourceText; the LLM is unreliable here.
+        reviewed = pageNumberResolver.resolve(reviewed, context.getDocumentAnalysis());
         context.setDeal(reviewed);
 
         JsonNode originalTree = jsonSerializer.readTree(originalJson);

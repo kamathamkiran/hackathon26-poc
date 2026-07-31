@@ -27,14 +27,11 @@ public class DocumentAiMapper {
                     DocumentPage.builder()
                             .pageNumber(page.getPageNumber())
                             .text(pageText)
-                            .blankPage(pageText.isBlank())
                             .build()
             );
         }
 
         return DocumentAnalysis.builder()
-                .totalPages(document.getPagesCount())
-                .fullText(document.getText())
                 .pages(pages)
                 .build();
     }

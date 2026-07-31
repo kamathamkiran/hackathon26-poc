@@ -39,14 +39,6 @@ public class WorkflowManager {
         workflowRepository.save(workflow);
     }
 
-    public void markCompleted(WorkflowEntity workflow) {
-
-        workflow.setStatus(WorkflowStatus.COMPLETED);
-        workflow.setCompletedAt(LocalDateTime.now());
-
-        workflowRepository.save(workflow);
-    }
-
     public void markFailed(
             WorkflowEntity workflow,
             String reason) {

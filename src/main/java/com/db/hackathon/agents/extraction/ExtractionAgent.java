@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 public class ExtractionAgent implements WorkflowAgent {
 
     private final SemanticRunnerService runnerService;
+    private final PageNumberResolver pageNumberResolver;
 
     @Override
     public AgentType getAgentType() {
@@ -34,6 +35,9 @@ public class ExtractionAgent implements WorkflowAgent {
 
         Deal deal = runnerService.extractAgreement(
                         context.getDocumentAnalysis());
+
+        // Deterministically resolve page numbers from sourceText; the LLM is unreliable here.
+        deal = pageNumberResolver.resolve(deal, context.getDocumentAnalysis());
 
         context.setDeal(deal);
         log.info("Extracted deal data: {}", deal);
