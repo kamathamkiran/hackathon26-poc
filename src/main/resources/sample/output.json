@@ -1,0 +1,193 @@
+{
+    "workflowId": "abc-abc-abc",
+    "deal": {
+        "dealName": null,
+        "currency": {
+            "value": "USD",
+            "pageNumber": 1,
+            "confidence": 0.9,
+            "sourceText": "Five Million Dollars"
+        },
+        "department": null,
+        "branch": null,
+        "processingAreaCode": null,
+        "classification": null,
+        "agreementDate": {
+            "value": "2011-04-01",
+            "pageNumber": 1,
+            "confidence": 1.0,
+            "sourceText": "April 1, 2011"
+        },
+        "globalDealProposedCommitmentAmount": {
+            "value": "$5,000,000.00",
+            "pageNumber": 1,
+            "confidence": 1.0,
+            "sourceText": "$5,000,000.00"
+        },
+        "expenseCode": null,
+        "dealAdminAgent": {
+            "customerExternalId": null,
+            "dealAdminServicingGroup": {
+                "profileType": null
+            }
+        },
+        "dealBorrower": {
+            "value": "S&W SEED COMPANY",
+            "pageNumber": 1,
+            "confidence": 1.0,
+            "sourceText": "S&W SEED COMPANY"
+        },
+        "borrowerIndicator": null,
+        "interestPricingOptions": [
+            {
+                "pricingOption": null
+            }
+        ],
+        "facilityList": [
+            {
+                "dealTrackingNumber": null,
+                "facilityName": {
+                    "value": "Line of Credit",
+                    "pageNumber": 1,
+                    "confidence": 1.0,
+                    "sourceText": "Line of Credit"
+                },
+                "facilityType": {
+                    "value": "Line of Credit",
+                    "pageNumber": 1,
+                    "confidence": 0.9,
+                    "sourceText": "Line of Credit"
+                },
+                "proposedCommitmentAmount": {
+                    "value": "$5,000,000.00",
+                    "pageNumber": 1,
+                    "confidence": 1.0,
+                    "sourceText": "$5,000,000.00"
+                },
+                "closingCommitment": null,
+                "agreementDate": {
+                    "value": "2011-04-01",
+                    "pageNumber": 1,
+                    "confidence": 1.0,
+                    "sourceText": "April 1, 2011"
+                },
+                "effectiveDate": null,
+                "expiryDate": {
+                    "value": "2012-04-01",
+                    "pageNumber": 1,
+                    "confidence": 1.0,
+                    "sourceText": "April 1, 2012"
+                },
+                "finalMaturityDate": null,
+                "risk": {
+                    "riskTypeCode": null
+                },
+                "loanPurpose": {
+                    "loanPurposeCode": {
+                        "value": "finance Borrower's working capital requirements",
+                        "pageNumber": 1,
+                        "confidence": 1.0,
+                        "sourceText": "finance Borrower's working capital requirements"
+                    }
+                },
+                "facilityInterestPricingList": [
+                    {
+                        "optionName": null,
+                        "rateBasis": null,
+                        "baseRate": null,
+                        "spread": null
+                    }
+                ],
+                "facilitySublimit": null,
+                "facilityRid": null,
+                "globalNewAmount": null
+            }
+        ]
+    },
+    "validationIssues": [
+        {
+            "field": "dealName",
+            "code": "MISSING_FIELD",
+            "severity": "ERROR",
+            "message": "Deal Name is mandatory",
+            "pageNumber": null
+        },
+        {
+            "field": "currency",
+            "code": "INVALID_CURRENCY",
+            "severity": "ERROR",
+            "message": "Currency 'Dollars' is not allowed. Allowed: [USD, EUR, GBP, HKD]",
+            "pageNumber": 1
+        },
+        {
+            "field": "agreementDate",
+            "code": "INVALID_DATE",
+            "severity": "ERROR",
+            "message": "Agreement Date 'April 1, 2011' must be an ISO date (yyyy-MM-dd)",
+            "pageNumber": 1
+        },
+        {
+            "field": "dealBorrower",
+            "code": "OUT_OF_RANGE",
+            "severity": "ERROR",
+            "message": "Borrower exceeds maximum length of 15",
+            "pageNumber": 1
+        },
+        {
+            "field": "facilityList[0].agreementDate",
+            "code": "INVALID_DATE",
+            "severity": "ERROR",
+            "message": "Facility Agreement Date 'April 1, 2011' must be an ISO date (yyyy-MM-dd)",
+            "pageNumber": 1
+        },
+        {
+            "field": "facilityList[0].expiryDate",
+            "code": "INVALID_DATE",
+            "severity": "ERROR",
+            "message": "Expiry Date 'April 1, 2012' must be an ISO date (yyyy-MM-dd)",
+            "pageNumber": 1
+        },
+        {
+            "field": "currency",
+            "code": "BUSINESS_RULE",
+            "severity": "WARNING",
+            "message": "Deal currency is Dollars; confirm each facility currency matches the deal currency",
+            "pageNumber": null
+        }
+    ],
+    "reviewIssues": [
+        {
+            "field": "currency",
+            "previousValue": "Dollars",
+            "updatedValue": "USD",
+            "confidence": 0.9,
+            "pageNumber": 1,
+            "message": "Review updated the value to match the source document"
+        },
+        {
+            "field": "agreementDate",
+            "previousValue": "April 1, 2011",
+            "updatedValue": "2011-04-01",
+            "confidence": 1.0,
+            "pageNumber": 1,
+            "message": "Review updated the value to match the source document"
+        },
+        {
+            "field": "facilityList[0].agreementDate",
+            "previousValue": "April 1, 2011",
+            "updatedValue": "2011-04-01",
+            "confidence": 1.0,
+            "pageNumber": 1,
+            "message": "Review updated the value to match the source document"
+        },
+        {
+            "field": "facilityList[0].expiryDate",
+            "previousValue": "April 1, 2012",
+            "updatedValue": "2012-04-01",
+            "confidence": 1.0,
+            "pageNumber": 1,
+            "message": "Review updated the value to match the source document"
+        }
+    ],
+    "overallConfidence": 0.21
+}

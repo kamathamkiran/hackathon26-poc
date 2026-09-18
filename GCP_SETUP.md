@@ -30,12 +30,12 @@ Use your own project and resource names where possible. The application currentl
 
 | Resource | Current value |
 | --- | --- |
-| Spring Cloud project | `gen-lang-client-0146388054` |
-| Document AI project | `277914962735` |
-| GCS bucket | `loaniq-agreement` |
-| Pub/Sub subscription | `agreement-upload-sub` |
+| Spring Cloud project | `hackathon26-509004` |
+| Document AI project | `825071657292` |
+| GCS bucket | `credit_aggrement_bucket` |
+| Pub/Sub subscription | `credit-agreement-upload-topic-sub` |
 | Document AI location | `asia-south1` |
-| Document AI processor ID | `bbe75eb9ad1a653c` |
+| Document AI processor ID | `d014d4c7a89929da` |
 | Credential file | `src/main/resources/hackathon26-credentials.json` |
 
 For a new setup, prefer one project for all resources. If the existing Document AI processor belongs to a different project, either keep the separate project and grant access across projects or create a new processor in the application project.
@@ -75,41 +75,64 @@ The upload code adds `uuid` and `username` as object metadata. Do not expose the
 The topic receives object-created notifications from GCS. The subscription is consumed by this application.
 
 1. Open **Pub/Sub** -> **Topics** -> **Create topic**.
-2. Create `agreement-upload-topic`.
-3. Create a subscription named `agreement-upload-sub` on that topic.
+2. Create `credit-agreement-upload-topic`.
+3. Create a subscription named `credit-agreement-upload-topic-sub` on that topic, if not created automatically
 4. Keep message retention and acknowledgement defaults for development.
 
-## 5. Allow GCS to Publish Notifications
+## 5. Create Runtime Permissions
 
-GCS uses its project service agent to publish to the Pub/Sub topic. Configure this entirely in the Google Cloud Console:
+For local development, create a dedicated service account:
 
-1. Open **IAM & Admin** -> **IAM** and select the application project.
-2. Find the Google-managed service account with this format:
-   `service-PROJECT_NUMBER@gs-project-accounts.iam.gserviceaccount.com`.
-3. If it is not listed, open **IAM & Admin** -> **Service Accounts**, select **Google-managed service accounts**, and locate the **Cloud Storage service agent**. Google creates it after the Cloud Storage API is enabled.
-4. Open **Pub/Sub** -> **Topics** -> `agreement-upload-topic`.
-5. Open the **Permissions** or **Grant access** panel.
-6. Add the Cloud Storage service agent as a principal.
-7. Select the role **Pub/Sub Publisher** and save.
-
-The project number is shown in **IAM & Admin** -> **Settings**. Use the project number, not the project ID, in the service-agent email address.
+1. Open **IAM & Admin** -> **Service Accounts** and select the application project.
+2. Select **Create service account**.
+3. Enter `credit-agreement-ai` as the service-account name and `Credit Agreement AI Deal Creation` as the description.
+4. Select **Create and continue**.
+5. In **Grant this service account access to project**, add **Pub/Sub Subscriber** and **Document AI API User**.
+6. Select **Continue**.
+7. For bucket access, open **Cloud Storage** -> **Buckets** -> `YOUR_BUCKET_NAME` -> **Permissions** -> **Grant access**. Add the service account email and select **Storage Object Admin**.
+8. Save each change.
 
 ## 6. Create the GCS Notification
 
-Create a notification for new object events from the Google Cloud Console:
+If the bucket's **Notifications** tab or **Create notification** action is not available, use the Google Cloud CLI from PowerShell. The following commands use the values currently configured in this project:
+
+```powershell
+$PROJECT_ID = "hackathon26-509004"
+$BUCKET = "credit_aggrement_bucket"
+$TOPIC = "credit-agreement-upload-topic"
+$SUBSCRIPTION = "credit-agreement-upload-topic-sub"
+
+gcloud auth login
+gcloud config set project $PROJECT_ID
+
+gcloud storage buckets notifications create "gs://$BUCKET" `
+  --topic="projects/$PROJECT_ID/topics/$TOPIC" `
+  --event-types=OBJECT_FINALIZE `
+  --payload-format=json
+```
+
+If a topic or subscription already exists, the corresponding `create` command can report an `ALREADY_EXISTS` error; continue with the IAM and notification commands. To inspect the result:
+
+```powershell
+gcloud storage buckets notifications list "gs://$BUCKET"
+gcloud pubsub topics get-iam-policy $TOPIC
+gcloud pubsub subscriptions describe $SUBSCRIPTION
+```
+
+The equivalent Console flow, when available in UI is:
 
 1. Open **Cloud Storage** -> **Buckets** and select `YOUR_BUCKET_NAME`.
 2. Open the **Notifications** tab.
 3. Select **Create notification**.
 4. Enter a notification name, such as `agreement-upload-notification`.
 5. For the destination, select **Cloud Pub/Sub topic**.
-6. Select the application project and the `agreement-upload-topic` topic.
+6. Select the application project and the `credit-agreement-upload-topic` topic.
 7. Select the object event **Object finalized**. This fires when an upload completes.
 8. Select **JSON** as the payload format and leave the optional prefix/suffix filters empty unless the application only processes a specific path.
 9. Select **Create**.
-10. Return to the bucket's **Notifications** tab and confirm the notification is listed and points to `agreement-upload-topic`.
+10. Return to the bucket's **Notifications** tab and confirm the notification is listed and points to `credit-agreement-upload-topic`.
 
-This notification is the **publisher**. The Spring Boot application does not publish the event; it only subscribes to `agreement-upload-sub`.
+This notification is the **publisher**. The Spring Boot application does not publish the event; it only subscribes to `credit-agreement-upload-topic-sub`.
 
 ## 7. Create a Document AI Processor
 
@@ -132,23 +155,7 @@ google:
 
 Document AI is not generally covered by an unlimited free tier. Test with small documents and monitor billing.
 
-## 8. Create Runtime Permissions
-
-For local development, create a dedicated service account rather than using a personal account:
-
-1. Open **IAM & Admin** -> **Service Accounts** and select the application project.
-2. Select **Create service account**.
-3. Enter `credit-agreement-ai` as the service-account name and `Credit Agreement AI local runtime` as the description.
-4. Select **Create and continue**.
-5. In **Grant this service account access to project**, add **Pub/Sub Subscriber** and **Document AI API User**.
-6. Select **Continue**.
-7. For bucket access, open **Cloud Storage** -> **Buckets** -> `YOUR_BUCKET_NAME` -> **Permissions** -> **Grant access**. Add the service account email and select **Storage Object Admin**.
-8. If the configured LLM uses Vertex AI, open **IAM & Admin** -> **IAM**, find the service account, select **Edit principal**, and add **Vertex AI User**.
-9. Save each change.
-
-For production, replace broad development roles with narrower custom roles and use Workload Identity or the hosting platform's attached service account instead of a JSON key.
-
-## 9. Configure Local Credentials
+## 8. Configure Local Credentials
 
 The current application loads the credential file configured here:
 
@@ -170,7 +177,7 @@ Place the file where the application can load it from the classpath, or change t
 
 **Never commit the JSON key.** Add the credential filename to `.gitignore`, rotate it immediately if it is exposed, and prefer Application Default Credentials or Workload Identity outside local development.
 
-## 10. Update Application Configuration
+## 9. Update Application Configuration
 
 Update `src/main/resources/application.yaml`:
 
@@ -187,19 +194,52 @@ google:
     processor-id: YOUR_PROCESSOR_ID
     credentials: hackathon26-credentials.json
   pubsub:
-    subscription: agreement-upload-sub
+    subscription: YOUR_SUBSCRIPTION_NAME
   bucket:
     name: YOUR_BUCKET_NAME
 ```
 
 The application currently uses an H2 in-memory database, so no Cloud SQL instance is required for local development.
 
+## 10. Configure Local Runtime Variables
+
+Get the `GOOGLE_API_KEY` from Google AI Studio:
+
+1. Open the [Google AI Studio API keys page](https://aistudio.google.com/app/apikey) and sign in with your Google account.
+2. Select **Create API key**.
+3. Select an existing Google Cloud project or create a project when prompted.
+4. Copy the generated key immediately and store it in a local password manager or other secure location.
+
+Do not paste the key into source code, `application.yaml`, `GCP_SETUP.md`, or commit it to Git. Rotate or delete the key from Google AI Studio if it is exposed.
+
+Set the `GOOGLE_API_KEY` environment variable before starting the application. Replace the placeholder with the key from Google AI Studio:
+
+In PowerShell:
+
+```powershell
+$env:GOOGLE_API_KEY = "YOUR_GOOGLE_API_KEY"
+```
+
+When running from an IDE, add the following VM option to the run configuration:
+
+```text
+-Dprompt.path=D:\Projects\agentic-ai\hackathon26-poc\src\main\resources\prompts
+```
+
+For a terminal run, pass the same option through Maven:
+
+```powershell
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.jvmArguments=-Dprompt.path=D:\Projects\agentic-ai\hackathon26-poc\src\main\resources\prompts"
+```
+
+The environment variable applies only to the current PowerShell session. Set it again in a new terminal, or configure `GOOGLE_API_KEY` in the IDE run configuration's environment variables.
+
 ## 11. Verify the Complete Flow
 
 Start the application:
 
 ```powershell
-.\mvnw.cmd spring-boot:run
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.jvmArguments=-Dprompt.path=D:\Projects\agentic-ai\hackathon26-poc\src\main\resources\prompts"
 ```
 
 Upload a small test PDF using the application's web UI or an HTTP client such as Postman. Send a `POST` request to `http://localhost:8080/workflow/upload` as `multipart/form-data` with these fields:
@@ -211,7 +251,7 @@ Upload a small test PDF using the application's web UI or an HTTP client such as
 Verify each boundary:
 
 1. Confirm the PDF exists in the GCS bucket.
-2. Open **Pub/Sub** -> `agreement-upload-sub` and check that messages are being acknowledged.
+2. Open **Pub/Sub** -> `credit-agreement-upload-topic-sub` and check that messages are being acknowledged.
 3. Check application logs for `Received Pub/Sub payload`.
 4. Check the `workflow` table for the workflow UUID.
 5. Confirm the status progresses through `UPLOADED`, `PARSED`, `EXTRACTED`, `VALIDATED`, `REVIEWED`, and `HUMAN_REVIEW_PENDING`.
@@ -222,7 +262,8 @@ Verify each boundary:
 Delete development resources from the Google Cloud Console when finished:
 
 1. Open **Cloud Storage** -> **Buckets**, select `YOUR_BUCKET_NAME`, open **Objects**, select all objects, choose **Delete**, then return to the bucket list and delete the bucket.
-2. Open **Pub/Sub** -> **Subscriptions**, select `agreement-upload-sub`, choose **Delete**, and confirm.
-3. Open **Pub/Sub** -> **Topics**, select `agreement-upload-topic`, choose **Delete**, and confirm.
+2. Open **Pub/Sub** -> **Subscriptions**, select `credit-agreement-upload-topic-sub`, choose **Delete**, and confirm.
+3. Open **Pub/Sub** -> **Topics**, select `credit-agreement-upload-topic`, choose **Delete**, and confirm.
 4. Open **IAM & Admin** -> **Service Accounts**, select `credit-agreement-ai`, choose **Delete**, and confirm.
 5. Delete the project from **IAM & Admin** -> **Settings** only if it contains no resources you need.
+

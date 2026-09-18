@@ -4,14 +4,10 @@ server:
 spring:
   cloud:
     gcp:
-      project-id: gen-lang-client-0146388054
+      project-id: hackathon26-509004
   application:
     name: credit-agreement-ai
   datasource:
-#    url: jdbc:postgresql://localhost:5432/postgres
-#    username: abhijitbalse
-#    password:
-#    driver-class-name: org.postgresql.Driver
      url: jdbc:h2:mem:hackathon26
      username: sa
      password:
@@ -35,14 +31,14 @@ google:
     userId: ops-user
     model: gemini-3.5-flash
   document-ai:
-    project-id: 277914962735
+    project-id: 825071657292
     location: asia-south1
-    processor-id: bbe75eb9ad1a653c
+    processor-id: d014d4c7a89929da
     credentials: hackathon26-credentials.json
   pubsub:
-    subscription: agreement-upload-sub
+    subscription: credit-agreement-upload-topic-sub
   bucket:
-    name: loaniq-agreement
+    name: credit_aggrement_bucket
 
 open-router:
   ai:
