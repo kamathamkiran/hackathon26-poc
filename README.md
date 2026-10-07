@@ -10,7 +10,8 @@ The flow is split into three phases:
 
 1. **Upload and publish**
   - An external UI uploads a PDF to `POST /workflow/upload`.
-   - The application stores the PDF and `uuid`/`username` metadata in Google Cloud Storage.
+  - The application records an `UPLOAD` event in `workflow_event`, then stores the PDF and `uuid`/`username` metadata in Google Cloud Storage.
+  - The upload event transitions from `STARTED` to `SUCCESS` or `FAILED` and records duration/failure reason.
    - GCS detects the new object and an external notification publishes an object-created event to Pub/Sub.
 
 2. **Subscribe and start**
@@ -66,7 +67,7 @@ The UI polls the database-backed workflow record after upload:
 GET /workflow/{uuid}/status
 ```
 
-The response includes `uuid`, `status`, `nextAgent`, `username`, `updatedAt`, `completedAt`, and `failureReason`. If an agent event failed, it also includes `eventStatus`, `failedAgent`, and `eventFailureReason` from the latest failed `workflow_event`. A workflow that has not yet been created returns `404`.
+The response includes `uuid`, `status`, `nextAgent`, `username`, `updatedAt`, `completedAt`, and `failureReason`. It also includes `currentAgent` and `eventStatus` for the latest workflow event. If that event failed, `failedAgent` and `eventFailureReason` are included. This allows polling to report upload and processing activity from `workflow_event` before the Pub/Sub subscriber creates the `workflow` row. `UPLOAD/STARTED` means upload is in progress; `UPLOAD/SUCCESS` means the PDF is uploaded. `404` is returned only when neither workflow nor event exists for the UUID.
 
 When the workflow reaches `HUMAN_REVIEW_PENDING`, the UI loads the persisted extraction response:
 
@@ -83,7 +84,7 @@ POST /workflow/{uuid}/sign-off
 Content-Type: application/json
 ```
 
-The request includes the review output and `reviewedFields`, whose entries must all have status `APPROVED`. The backend stores this payload in `human_output`, marks the `HUMAN_REVIEW` workflow event `SUCCESS`, clears `next_agent`, and updates the workflow to `HUMAN_REVIEW_COMPLETED` with `completed_at` set. The endpoint returns `409` if the workflow is not awaiting review and `400` if the submitted review is incomplete or contains unapproved fields.
+The request includes the review output and `reviewedFields`, whose entries must all have status `APPROVED`. The backend stores this payload in `human_output`, marks the `HUMAN_REVIEW` workflow event `SUCCESS`, clears `next_agent`, and updates the workflow to `HUMAN_REVIEW_COMPLETED` with `completed_at` set. The endpoint returns `404` for an unknown workflow, `409` if the workflow is not awaiting review or its human-review event is missing, and `400` if the submitted review is incomplete or contains unapproved fields. Sign-off logs include the workflow UUID, decision outcome, and field count, but not the review payload.
 
 For local development, the frontend defaults to `http://localhost:8080`. Set `VITE_API_BASE_URL` to override the backend origin.
 
@@ -103,9 +104,9 @@ GCS notifications, the Pub/Sub topic, and the topic-to-subscription connection m
 
 ## Persistence
 
-The workflow is stored in the `workflow` table. Each processing stage updates the workflow status and serialized metadata. The `workflow_event` table records agent execution status, duration, and retry information.
+The workflow is stored in the `workflow` table. Each processing stage updates the workflow status and serialized metadata. The `workflow_event` table records upload and agent execution status, duration, and retry information.
 
-The workflow status and metadata endpoints expose the latest workflow row to the UI. Review sign-off is persisted through the sign-off endpoint; deal creation is not implemented by this backend.
+The status endpoint combines the workflow row with the latest workflow event so the UI can report progress before a workflow row exists. Review sign-off is persisted through the sign-off endpoint; deal creation is not implemented by this backend.
 
 ## Run Locally
 

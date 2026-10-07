@@ -114,14 +114,18 @@ public class WorkflowController {
     public ResponseEntity<?> signOffWorkflow(
             @PathVariable String uuid,
             @RequestBody JsonNode reviewOutput) {
+        log.info("Human sign-off requested for workflow {}", uuid);
         WorkflowEntity workflow = workflowRepository.findById(uuid).orElse(null);
         if (workflow == null) {
+            log.warn("Human sign-off rejected for unknown workflow {}", uuid);
             return ResponseEntity.notFound().build();
         }
         if (workflow.getStatus() == WorkflowStatus.HUMAN_REVIEW_COMPLETED) {
+            log.info("Workflow {} was already signed off", uuid);
             return ResponseEntity.ok(signOffPayload(workflow));
         }
         if (workflow.getStatus() != WorkflowStatus.HUMAN_REVIEW_PENDING) {
+            log.warn("Human sign-off rejected for workflow {} with status {}", uuid, workflow.getStatus());
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("message", "Workflow is not awaiting human sign-off", "status",
                             workflow.getStatus().name()));
@@ -129,11 +133,14 @@ public class WorkflowController {
 
         JsonNode reviewedFields = reviewOutput.path("reviewedFields");
         if (!reviewedFields.isArray() || reviewedFields.isEmpty()) {
+            log.warn("Human sign-off rejected for workflow {} because reviewedFields is empty or missing", uuid);
             return ResponseEntity.badRequest()
                     .body(Map.of("message", "At least one approved review field is required"));
         }
+        int reviewedFieldCount = reviewedFields.size();
         for (JsonNode field : reviewedFields) {
             if (!"APPROVED".equals(field.path("status").asText())) {
+                log.warn("Human sign-off rejected for workflow {}: field status was not APPROVED", uuid);
                 return ResponseEntity.badRequest()
                         .body(Map.of("message", "All review fields must be approved before sign-off"));
             }
@@ -143,6 +150,7 @@ public class WorkflowController {
                 .findTopByWorkflowIdAndAgentOrderByUpdatedAtDesc(uuid, AgentType.HUMAN_REVIEW)
                 .orElse(null);
         if (reviewEvent == null) {
+            log.error("Human sign-off could not complete for workflow {}: HUMAN_REVIEW event not found", uuid);
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("message", "Human review event was not found"));
         }
@@ -160,6 +168,8 @@ public class WorkflowController {
         workflowEventRepository.save(reviewEvent);
         workflowRepository.save(workflow);
 
+        log.info("Human sign-off saved for workflow {}: status={}, reviewedFields={}, completedAt={}",
+                uuid, workflow.getStatus(), reviewedFieldCount, completedAt);
         return ResponseEntity.ok(signOffPayload(workflow));
     }
 
