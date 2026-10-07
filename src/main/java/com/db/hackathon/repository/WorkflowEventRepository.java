@@ -2,6 +2,7 @@ package com.db.hackathon.repository;
 
 import com.db.hackathon.entity.WorkflowEventEntity;
 import com.db.hackathon.enums.AgentType;
+import com.db.hackathon.enums.EventStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,6 +13,11 @@ public interface WorkflowEventRepository extends JpaRepository<WorkflowEventEnti
 
     Optional<WorkflowEventEntity> findTopByWorkflowIdAndAgentOrderByUpdatedAtDesc(
             String workflowId,
-            AgentType agent
-    );
+            AgentType agent);
+
+    Optional<WorkflowEventEntity> findTopByWorkflowIdAndStatusOrderByUpdatedAtDesc(
+            String workflowId,
+            EventStatus status);
+
+    Optional<WorkflowEventEntity> findTopByWorkflowIdOrderByUpdatedAtDesc(String workflowId);
 }

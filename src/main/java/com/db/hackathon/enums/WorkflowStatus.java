@@ -14,6 +14,8 @@ public enum WorkflowStatus {
 
     HUMAN_REVIEW_PENDING,
 
+    HUMAN_REVIEW_COMPLETED,
+
     DEAL_CREATED,
 
     FAILED

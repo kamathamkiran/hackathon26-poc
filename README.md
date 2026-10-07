@@ -25,7 +25,7 @@ The flow is split into three phases:
 Current status progression:
 
 ```text
-UPLOADED -> PARSED -> EXTRACTED -> VALIDATED -> REVIEWED -> HUMAN_REVIEW_PENDING
+UPLOADED -> PARSED -> EXTRACTED -> VALIDATED -> REVIEWED -> HUMAN_REVIEW_PENDING -> HUMAN_REVIEW_COMPLETED
 ```
 
 `DEAL_CREATED` is defined but is not currently reached by the application.
@@ -58,6 +58,35 @@ The immediate response confirms the GCS upload. It does not contain the final de
 File uploaded successfully: gs://<bucket>/<object-name>
 ```
 
+## Workflow Polling API
+
+The UI polls the database-backed workflow record after upload:
+
+```http
+GET /workflow/{uuid}/status
+```
+
+The response includes `uuid`, `status`, `nextAgent`, `username`, `updatedAt`, `completedAt`, and `failureReason`. If an agent event failed, it also includes `eventStatus`, `failedAgent`, and `eventFailureReason` from the latest failed `workflow_event`. A workflow that has not yet been created returns `404`.
+
+When the workflow reaches `HUMAN_REVIEW_PENDING`, the UI loads the persisted extraction response:
+
+```http
+GET /workflow/{uuid}/metadata
+```
+
+The response is the stored extraction JSON, including `workflowId`, `deal`, validation issues, review issues, and overall confidence. The endpoint returns `404` for an unknown workflow and `409` while output is not ready.
+
+After all returned fields are approved, the UI submits the review decisions:
+
+```http
+POST /workflow/{uuid}/sign-off
+Content-Type: application/json
+```
+
+The request includes the review output and `reviewedFields`, whose entries must all have status `APPROVED`. The backend stores this payload in `human_output`, marks the `HUMAN_REVIEW` workflow event `SUCCESS`, clears `next_agent`, and updates the workflow to `HUMAN_REVIEW_COMPLETED` with `completed_at` set. The endpoint returns `409` if the workflow is not awaiting review and `400` if the submitted review is incomplete or contains unapproved fields.
+
+For local development, the frontend defaults to `http://localhost:8080`. Set `VITE_API_BASE_URL` to override the backend origin.
+
 ## Configuration
 
 Main configuration is in `src/main/resources/application.yaml`:
@@ -76,7 +105,7 @@ GCS notifications, the Pub/Sub topic, and the topic-to-subscription connection m
 
 The workflow is stored in the `workflow` table. Each processing stage updates the workflow status and serialized metadata. The `workflow_event` table records agent execution status, duration, and retry information.
 
-The external UI is expected to read the latest workflow row from the database. This repository contains only the backend; it has no UI implementation, polling code, or separate workflow-result endpoint.
+The workflow status and metadata endpoints expose the latest workflow row to the UI. Review sign-off is persisted through the sign-off endpoint; deal creation is not implemented by this backend.
 
 ## Run Locally
 
