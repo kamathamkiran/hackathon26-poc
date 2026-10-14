@@ -1,0 +1,62 @@
+{
+  "dealId": "9d37c6f4-1e7b-412b-809b-433399cf6bc4",
+  "uuid": "9d37c6f4-1e7b-412b-809b-433399cf6bc4",
+  "borrowerName": "N/A",
+  "dealName": "sec.gov_Archives_edgar_data_10-1",
+  "fileName": "sec.gov_Archives_edgar_data_10-1.pdf",
+  "effectiveDate": "2026-04-10",
+  "totalAmount": "N/A",
+  "createdAt": "2026-10-14T15:44:14.479177500",
+  "totalFields": 17,
+  "approvedFields": 17,
+  "rejectedFields": 0,
+  "pendingFields": 0,
+  "status": "SIGNED_OFF",
+  "attributes": {
+    "Deal Name": "Seventh Amendment to Credit Agreement",
+    "Currency": "USD",
+    "Agreement Date": "2026-04-10",
+    "Facility Name": "2025 Extended Revolving Credit",
+    "Closing Commitment": "100000000",
+    "Facility Interest Pricing List / 0 / Rate Basis": "Term Benchmark",
+    "Facility Interest Pricing List / 0 / Spread": "3.25",
+    "Facility Interest Pricing List / 1 / Rate Basis": "Base Rate",
+    "Facility Interest Pricing List / 1 / Spread": "2.25",
+    "Final Maturity Date": "2030-06-12",
+    "Facility Sublimit / Name": "Letter of Credit Sublimit"
+  },
+  "facilityList": [
+    {
+      "facilityName": "2024 Refinancing Term Loan",
+      "closingCommitment": "425000000",
+      "facilityInterestPricingList": {
+        "0": {
+          "rateBasis": "SOFR",
+          "spread": "3.75"
+        },
+        "1": {
+          "rateBasis": "Base Rate",
+          "spread": "2.75"
+        }
+      }
+    },
+    {
+      "facilityName": "2025 Extended Revolving Credit",
+      "closingCommitment": "100000000",
+      "finalMaturityDate": "2030-06-12",
+      "facilityInterestPricingList": {
+        "0": {
+          "rateBasis": "Term Benchmark",
+          "spread": "3.25"
+        },
+        "1": {
+          "rateBasis": "Base Rate",
+          "spread": "2.25"
+        }
+      },
+      "facilitySublimit": {
+        "name": "Letter of Credit Sublimit"
+      }
+    }
+  ]
+}

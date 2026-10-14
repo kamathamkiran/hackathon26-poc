@@ -1,6 +1,5 @@
 package com.db.hackathon.workflow;
 
-import com.db.hackathon.agents.document.DocumentParserAgent;
 import com.db.hackathon.agents.extraction.ExtractionAgent;
 import com.db.hackathon.agents.HumanReviewAgent;
 import com.db.hackathon.agents.review.ReviewAgent;
@@ -18,8 +17,8 @@ public class WorkflowEngine {
 
     private final WorkflowContextBuilder contextBuilder;
     private final WorkflowExecutor executor;
+    private final WorkflowManager workflowManager;
 
-    private final DocumentParserAgent parserAgent;
     private final ExtractionAgent extractionAgent;
     private final ValidationAgent validationAgent;
     private final ReviewAgent reviewAgent;
@@ -35,7 +34,6 @@ public class WorkflowEngine {
             switch (workflow.getStatus()) {
 
                 case UPLOADED -> {
-                    executor.execute(parserAgent, context);
                     executor.execute(extractionAgent, context);
                     executor.execute(validationAgent, context);
                     executor.execute(reviewAgent, context);
@@ -43,10 +41,10 @@ public class WorkflowEngine {
                 }
 
                 case PARSED -> {
-                    executor.execute(extractionAgent, context);
-                    executor.execute(validationAgent, context);
-                    executor.execute(reviewAgent, context);
-                    executor.execute(humanReviewAgent, context);
+                    workflowManager.markFailed(workflow,
+                            "This legacy PARSED workflow has no PDF source reference. Upload the agreement again.");
+                    log.error("Workflow {} is in the legacy PARSED state and cannot be resumed. Upload the agreement again.",
+                            workflow.getWorkflowId());
                 }
 
                 case EXTRACTED -> {

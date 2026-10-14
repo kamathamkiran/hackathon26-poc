@@ -41,7 +41,9 @@ public class WorkflowExecutor {
                     workflow,
                     agent.getOutputStatus(),
                     agent.getAgentType(),
-                    agent.getOutput(context));
+                    agent.getOutput(context),
+                    context.getSourceBucket(),
+                    context.getSourceFilePath());
 
             boolean trackEvent = agent.getAgentType() != AgentType.HUMAN_REVIEW;
 

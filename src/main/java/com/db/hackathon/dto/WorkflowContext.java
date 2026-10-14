@@ -1,7 +1,6 @@
 package com.db.hackathon.dto;
 
 import com.db.hackathon.entity.WorkflowEntity;
-import com.db.hackathon.model.document.DocumentAnalysis;
 import com.db.hackathon.model.extraction.Deal;
 import com.db.hackathon.model.review.ReviewIssue;
 import com.db.hackathon.model.validation.ValidationResult;
@@ -16,11 +15,11 @@ public class WorkflowContext {
 
     private WorkflowEntity workflow;
 
-    private String bucketName;
+    private String sourceBucket;
 
-    private String filePath;
+    private String sourceFilePath;
 
-    private DocumentAnalysis documentAnalysis;
+    private byte[] pdfBytes;
 
     private Deal deal;
 

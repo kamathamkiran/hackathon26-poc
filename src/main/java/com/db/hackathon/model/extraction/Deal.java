@@ -15,6 +15,9 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Deal {
 
+    @Builder.Default
+    private String version = "1.0";
+
     private ExtractedField dealName;
 
     private ExtractedField currency;
@@ -35,9 +38,7 @@ public class Deal {
 
     private DealAdminAgent dealAdminAgent;
 
-    private ExtractedField dealBorrower;
-
-    private ExtractedField borrowerIndicator;
+    private DealBorrower dealBorrower;
 
     private List<InterestPricingOption> interestPricingOptions;
 

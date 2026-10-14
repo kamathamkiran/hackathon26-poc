@@ -66,6 +66,8 @@ public class ValidationService {
         ValidationRuleSet rules = ruleProvider.ruleSet();
 
         applySection(rules.section("deal"), deal, "", errors, warnings);
+        applySection(rules.section("dealBorrower"), deal.getDealBorrower(),
+                "dealBorrower.", errors, warnings);
         applySection(rules.section("dealAdminAgent"), deal.getDealAdminAgent(),
                 "dealAdminAgent.", errors, warnings);
         applySection(rules.section("dealAdminServicingGroup"),

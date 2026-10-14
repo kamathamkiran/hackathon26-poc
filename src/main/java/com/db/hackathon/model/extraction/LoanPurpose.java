@@ -10,5 +10,8 @@ import lombok.*;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LoanPurpose {
 
+    @Builder.Default
+    private String version = "1.0";
+
     private ExtractedField loanPurposeCode;
 }

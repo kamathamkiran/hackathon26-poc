@@ -3,8 +3,10 @@ package com.db.hackathon.agents.extraction;
 import com.db.hackathon.agents.WorkflowAgent;
 import com.db.hackathon.enums.AgentType;
 import com.db.hackathon.enums.WorkflowStatus;
+import com.db.hackathon.dto.ExtractionResponse;
 import com.db.hackathon.dto.WorkflowContext;
 import com.db.hackathon.model.extraction.Deal;
+import com.db.hackathon.service.PdfSourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -15,7 +17,7 @@ import org.springframework.stereotype.Component;
 public class ExtractionAgent implements WorkflowAgent {
 
     private final SemanticRunnerService runnerService;
-    private final PageNumberResolver pageNumberResolver;
+    private final PdfSourceService pdfSourceService;
 
     @Override
     public AgentType getAgentType() {
@@ -33,14 +35,9 @@ public class ExtractionAgent implements WorkflowAgent {
 
         log.info("Starting agreement extraction");
 
-        Deal deal = runnerService.extractAgreement(
-                        context.getDocumentAnalysis());
-
-        // Deterministically resolve page numbers from sourceText; the LLM is unreliable here.
-        deal = pageNumberResolver.resolve(deal, context.getDocumentAnalysis());
+        Deal deal = runnerService.extractAgreement(pdfSourceService.loadPdf(context));
 
         context.setDeal(deal);
-        log.info("Extracted deal data: {}", deal);
 
         log.info("Agreement extraction completed");
 
@@ -48,7 +45,10 @@ public class ExtractionAgent implements WorkflowAgent {
 
     @Override
     public Object getOutput(WorkflowContext context) {
-        return context.getDeal();
+        return ExtractionResponse.builder()
+                .workflowId(context.getWorkflow().getWorkflowId())
+                .deal(context.getDeal())
+                .build();
     }
 
 }

@@ -3,15 +3,17 @@
   "sections": {
     "deal": [
       { "field": "dealName", "label": "Deal Name", "mandatory": true, "type": "STRING", "maxLength": 40 },
-      { "field": "currency", "label": "Currency", "mandatory": true, "type": "CURRENCY", "allowedValues": ["USD", "EUR", "GBP", "HKD"] },
+      { "field": "currency", "label": "Currency", "mandatory": true, "type": "CURRENCY", "allowedValues": ["USD", "EUR", "GBP", "INR", "JPY", "CAD", "AUD", "CHF"] },
       { "field": "agreementDate", "label": "Agreement Date", "mandatory": true, "type": "DATE" },
       { "field": "globalDealProposedCommitmentAmount", "label": "Global Proposed Commitment", "type": "AMOUNT", "positive": true },
       { "field": "department", "label": "Department", "type": "STRING", "maxLength": 40 },
       { "field": "branch", "label": "Branch", "type": "STRING", "maxLength": 40 },
       { "field": "processingAreaCode", "label": "Processing Area Code", "type": "STRING", "maxLength": 20 },
       { "field": "classification", "label": "Classification", "type": "STRING", "maxLength": 40 },
-      { "field": "expenseCode", "label": "Expense Code", "type": "STRING", "maxLength": 20 },
-      { "field": "dealBorrower", "label": "Borrower", "mandatory": true, "type": "STRING", "maxLength": 15 },
+      { "field": "expenseCode", "label": "Expense Code", "type": "STRING", "maxLength": 20 }
+    ],
+    "dealBorrower": [
+      { "field": "customerExternalId", "label": "Borrower External ID", "mandatory": true, "type": "STRING", "maxLength": 15 },
       { "field": "borrowerIndicator", "label": "Borrower Indicator", "type": "STRING", "maxLength": 5 }
     ],
     "dealAdminAgent": [
@@ -33,7 +35,6 @@
       { "field": "effectiveDate", "label": "Effective Date", "type": "DATE" },
       { "field": "expiryDate", "label": "Expiry Date", "type": "DATE" },
       { "field": "finalMaturityDate", "label": "Final Maturity Date", "type": "DATE" },
-      { "field": "facilitySublimit", "label": "Facility Sublimit", "type": "AMOUNT", "nonNegative": true },
       { "field": "globalNewAmount", "label": "Global New Amount", "type": "AMOUNT", "nonNegative": true }
     ],
     "risk": [

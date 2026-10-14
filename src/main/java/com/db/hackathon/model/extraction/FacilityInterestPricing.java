@@ -10,6 +10,9 @@ import lombok.*;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FacilityInterestPricing {
 
+    @Builder.Default
+    private String version = "1.0";
+
     private ExtractedField optionName;
 
     private ExtractedField rateBasis;

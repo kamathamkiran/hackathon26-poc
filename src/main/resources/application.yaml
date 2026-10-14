@@ -30,11 +30,7 @@ google:
     appName: credit-agreement-ai
     userId: ops-user
     model: gemini-3.5-flash
-  document-ai:
-    project-id: 825071657292
-    location: asia-south1
-    processor-id: d014d4c7a89929da
-    credentials: hackathon26-credentials.json
+  credentials: hackathon26-credentials.json
   pubsub:
     subscription: credit-agreement-upload-topic-sub
   bucket:

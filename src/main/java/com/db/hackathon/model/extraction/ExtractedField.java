@@ -1,5 +1,6 @@
 package com.db.hackathon.model.extraction;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,4 +21,13 @@ public class ExtractedField {
     private Double confidence;
 
     private String sourceText;
+
+    @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+    public static ExtractedField fromScalar(String value) {
+        return ExtractedField.builder()
+                .value(value)
+                .confidence(0.0)
+                .sourceText("")
+                .build();
+    }
 }

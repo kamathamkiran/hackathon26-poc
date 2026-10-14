@@ -47,7 +47,7 @@ public class AgreementSubscriber {
                     .workflowId(uuid) //pass uuid available in metadata
                     .username(username)
                     .status(WorkflowStatus.UPLOADED)
-                    .nextAgent(AgentType.DOCUMENT_PARSER)
+                    .nextAgent(AgentType.EXTRACTION)
                     .metadata(fileMetadata.toString())
                     .build();
 

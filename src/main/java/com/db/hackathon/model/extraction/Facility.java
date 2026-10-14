@@ -12,6 +12,9 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Facility {
 
+    @Builder.Default
+    private String version = "1.0";
+
     private ExtractedField dealTrackingNumber;
 
     private ExtractedField facilityName;
@@ -36,7 +39,7 @@ public class Facility {
 
     private List<FacilityInterestPricing> facilityInterestPricingList;
 
-    private ExtractedField facilitySublimit;
+    private FacilitySublimit facilitySublimit;
 
     private ExtractedField facilityRid;
 

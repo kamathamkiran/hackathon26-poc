@@ -18,7 +18,6 @@
         <google.adk.version>1.7.0</google.adk.version>
         <lombok.version>1.18.38</lombok.version>
         <google.cloud.libraries.version>26.74.0</google.cloud.libraries.version>
-        <protobuf.version>4.33.2</protobuf.version>
     </properties>
 
     <!-- Single dependencyManagement -->
@@ -29,14 +28,6 @@
                 <groupId>com.google.cloud</groupId>
                 <artifactId>libraries-bom</artifactId>
                 <version>${google.cloud.libraries.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>com.google.protobuf</groupId>
-                <artifactId>protobuf-bom</artifactId>
-                <version>${protobuf.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -115,29 +106,10 @@
             <version>3.0.0</version>
         </dependency>
 
-        <!-- Google Document AI -->
-        <dependency>
-            <groupId>com.google.cloud</groupId>
-            <artifactId>google-cloud-document-ai</artifactId>
-        </dependency>
-
         <!-- Google Pub/Sub -->
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>spring-cloud-gcp-starter-pubsub</artifactId>
-        </dependency>
-
-        <!-- Protobuf -->
-        <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-            <version>${protobuf.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java-util</artifactId>
-            <version>${protobuf.version}</version>
         </dependency>
 
         <!-- Tests -->

@@ -1,8 +1,8 @@
 package com.db.hackathon.agents.extraction;
 
 import com.db.hackathon.agents.PromptBuilder;
-import com.db.hackathon.model.extraction.Deal;
 import com.db.hackathon.model.validation.ValidationResult;
+import com.db.hackathon.model.extraction.Deal;
 import com.google.adk.agents.RunConfig;
 import com.google.adk.artifacts.InMemoryArtifactService;
 import com.google.adk.events.Event;
@@ -11,6 +11,7 @@ import com.google.adk.runner.Runner;
 import com.google.adk.sessions.InMemorySessionService;
 import com.google.adk.sessions.Session;
 import com.google.genai.types.Content;
+import com.google.genai.types.Blob;
 import com.google.genai.types.Part;
 import io.reactivex.rxjava3.core.Flowable;
 import jakarta.annotation.PostConstruct;
@@ -19,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.db.hackathon.model.document.DocumentAnalysis;
 
 @Slf4j
 @Service
@@ -39,6 +39,7 @@ public class SemanticRunnerService {
     private Runner runner;
 
     private InMemorySessionService sessionService;
+    private static final String PDF_MIME_TYPE = "application/pdf";
 
     @PostConstruct
     public void initialize() {
@@ -56,14 +57,14 @@ public class SemanticRunnerService {
     }
 
     public Deal extractAgreement(
-            DocumentAnalysis documentAnalysis)
+            byte[] pdfBytes)
             throws Exception {
 
         String sessionId = createSession();
 
-        String prompt = promptBuilder.buildExtractionPrompt(documentAnalysis);
+        String prompt = promptBuilder.buildExtractionPrompt();
 
-        String response = execute(prompt, sessionId);
+        String response = executeWithPdf(prompt, sessionId, pdfBytes);
 
         response = clean(response);
 
@@ -83,7 +84,7 @@ public class SemanticRunnerService {
      * updated {@link Deal} with corrected value / confidence / pageNumber / sourceText where needed.
      */
     public Deal reviewAgreement(
-            DocumentAnalysis documentAnalysis,
+            byte[] pdfBytes,
             String currentDealJson,
             ValidationResult validationIssuesJson)
             throws Exception {
@@ -91,9 +92,9 @@ public class SemanticRunnerService {
         String sessionId = createSession();
 
         String prompt = promptBuilder.buildReviewPrompt(
-                documentAnalysis, currentDealJson, validationIssuesJson);
+                currentDealJson, validationIssuesJson);
 
-        String response = clean(execute(prompt, sessionId));
+        String response = clean(executeWithPdf(prompt, sessionId, pdfBytes));
 
         return objectMapper.readValue(response, Deal.class);
     }
@@ -102,14 +103,38 @@ public class SemanticRunnerService {
             String prompt,
             String sessionId)
             throws Exception {
+        return execute(sessionId, Part.builder().text(prompt).build());
+    }
+
+    private String executeWithPdf(
+            String prompt,
+            String sessionId,
+            byte[] pdfBytes)
+            throws Exception {
+        if (pdfBytes == null || pdfBytes.length == 0) {
+            throw new IllegalArgumentException("PDF content is missing or empty");
+        }
+
+        Part promptPart = Part.builder().text(prompt).build();
+        Part pdfPart = Part.builder()
+                .inlineData(Blob.builder()
+                        .mimeType(PDF_MIME_TYPE)
+                        .data(pdfBytes)
+                        .build())
+                .build();
+
+        return execute(sessionId, promptPart, pdfPart);
+    }
+
+    private String execute(
+            String sessionId,
+            Part... parts)
+            throws Exception {
 
         Content content =
                 Content.builder()
                         .role("user")
-                        .parts(
-                                Part.builder()
-                                        .text(prompt)
-                                        .build())
+                        .parts(parts)
                         .build();
 
         StringBuilder answer = new StringBuilder();

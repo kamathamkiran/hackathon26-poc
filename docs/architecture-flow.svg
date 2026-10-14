@@ -51,7 +51,7 @@
 
   <rect x="740" y="265" width="190" height="82" class="app"/>
   <text x="835" y="300" class="text">AI processing</text>
-  <text x="835" y="326" class="small">parse, extract, validate, review</text>
+  <text x="835" y="326" class="small">extract, validate, review</text>
 
   <rect x="985" y="265" width="180" height="82" class="app"/>
   <text x="1075" y="300" class="text">Workflow table</text>

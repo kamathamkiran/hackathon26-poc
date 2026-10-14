@@ -2,7 +2,7 @@
 
 This guide provisions the Google Cloud resources required by the Credit Agreement AI backend.
 
-> Important: Google Cloud requires a billing account for the Free Trial and many APIs. New accounts may receive promotional credits for a limited period, but Document AI, Gemini/Vertex AI, storage, and network usage can create charges after credits or free quotas are exhausted. Set a budget alert before testing.
+> Important: Google Cloud requires a billing account for the Free Trial and many APIs. New accounts may receive promotional credits for a limited period, but storage and network usage can create charges after credits or free quotas are exhausted. Set a budget alert before testing.
 
 ## Architecture
 
@@ -18,7 +18,7 @@ flowchart LR
     Topic --> Sub[Pub/Sub subscription]
     Sub --> Listener[AgreementSubscriber]
     Listener --> DB[(Workflow table)]
-    Listener --> AI[Document AI and LLM]
+    Listener --> AI[LLM]
     AI --> DB
     UI[External UI] --> App
     UI --> DB
@@ -31,14 +31,9 @@ Use your own project and resource names where possible. The application currentl
 | Resource | Current value |
 | --- | --- |
 | Spring Cloud project | `hackathon26-509004` |
-| Document AI project | `825071657292` |
 | GCS bucket | `credit_aggrement_bucket` |
 | Pub/Sub subscription | `credit-agreement-upload-topic-sub` |
-| Document AI location | `asia-south1` |
-| Document AI processor ID | `d014d4c7a89929da` |
 | Credential file | `src/main/resources/hackathon26-credentials.json` |
-
-For a new setup, prefer one project for all resources. If the existing Document AI processor belongs to a different project, either keep the separate project and grant access across projects or create a new processor in the application project.
 
 ## 1. Create a Free-Tier Account and Project
 
@@ -57,7 +52,6 @@ In **APIs & Services** -> **Library**, enable:
 - Cloud Storage
 - Google Cloud Storage JSON API
 - Cloud Pub/Sub API
-- Cloud Document AI API
 
 ## 3. Create the GCS Bucket
 
@@ -87,7 +81,7 @@ For local development, create a dedicated service account:
 2. Select **Create service account**.
 3. Enter `credit-agreement-ai` as the service-account name and `Credit Agreement AI Deal Creation` as the description.
 4. Select **Create and continue**.
-5. In **Grant this service account access to project**, add **Pub/Sub Subscriber** and **Document AI API User**.
+5. In **Grant this service account access to project**, add **Pub/Sub Subscriber**.
 6. Select **Continue**.
 7. For bucket access, open **Cloud Storage** -> **Buckets** -> `YOUR_BUCKET_NAME` -> **Permissions** -> **Grant access**. Add the service account email and select **Storage Object Admin**.
 8. Save each change.
@@ -134,35 +128,13 @@ The equivalent Console flow, when available in UI is:
 
 This notification is the **publisher**. The Spring Boot application does not publish the event; it only subscribes to `credit-agreement-upload-topic-sub`.
 
-## 7. Create a Document AI Processor
-
-1. Open **Document AI** in the Google Cloud Console.
-2. Select the same project used by the application, unless you intentionally use a separate Document AI project.
-3. Choose **Processor Gallery** -> select the appropriate document/OCR processor.
-4. Create the processor in the desired location.
-5. Copy the processor ID from the processor details page.
-6. Record the processor location and project ID.
-
-Update these values in `src/main/resources/application.yaml`:
-
-```yaml
-google:
-  document-ai:
-    project-id: YOUR_DOCUMENT_AI_PROJECT_ID
-    location: YOUR_PROCESSOR_LOCATION
-    processor-id: YOUR_PROCESSOR_ID
-```
-
-Document AI is not generally covered by an unlimited free tier. Test with small documents and monitor billing.
-
-## 8. Configure Local Credentials
+## 7. Configure Local Credentials
 
 The current application loads the credential file configured here:
 
 ```yaml
 google:
-  document-ai:
-    credentials: hackathon26-credentials.json
+  credentials: hackathon26-credentials.json
 ```
 
 For local-only development, create and download a key from the Google Cloud Console:
@@ -177,7 +149,7 @@ Place the file where the application can load it from the classpath, or change t
 
 **Never commit the JSON key.** Add the credential filename to `.gitignore`, rotate it immediately if it is exposed, and prefer Application Default Credentials or Workload Identity outside local development.
 
-## 9. Update Application Configuration
+## 8. Update Application Configuration
 
 Update `src/main/resources/application.yaml`:
 
@@ -188,11 +160,7 @@ spring:
       project-id: YOUR_PROJECT_ID
 
 google:
-  document-ai:
-    project-id: YOUR_DOCUMENT_AI_PROJECT_ID
-    location: YOUR_PROCESSOR_LOCATION
-    processor-id: YOUR_PROCESSOR_ID
-    credentials: hackathon26-credentials.json
+  credentials: hackathon26-credentials.json
   pubsub:
     subscription: YOUR_SUBSCRIPTION_NAME
   bucket:
@@ -201,7 +169,7 @@ google:
 
 The application currently uses an H2 in-memory database, so no Cloud SQL instance is required for local development.
 
-## 10. Configure Local Runtime Variables
+## 9. Configure Local Runtime Variables
 
 Get the `GOOGLE_API_KEY` from Google AI Studio:
 
@@ -234,7 +202,7 @@ For a terminal run, pass the same option through Maven:
 
 The environment variable applies only to the current PowerShell session. Set it again in a new terminal, or configure `GOOGLE_API_KEY` in the IDE run configuration's environment variables.
 
-## 11. Verify the Complete Flow
+## 10. Verify the Complete Flow
 
 Start the application:
 
@@ -254,7 +222,7 @@ Verify each boundary:
 2. Open **Pub/Sub** -> `credit-agreement-upload-topic-sub` and check that messages are being acknowledged.
 3. Check application logs for `Received Pub/Sub payload`.
 4. Check the `workflow` table for the workflow UUID.
-5. Confirm the status progresses through `UPLOADED`, `PARSED`, `EXTRACTED`, `VALIDATED`, `REVIEWED`, and `HUMAN_REVIEW_PENDING`.
+5. Confirm the status progresses through `UPLOADED`, `EXTRACTED`, `VALIDATED`, `REVIEWED`, and `HUMAN_REVIEW_PENDING`.
 6. Inspect `metadata` for the latest serialized result.
 
 ## Cleanup
@@ -266,4 +234,3 @@ Delete development resources from the Google Cloud Console when finished:
 3. Open **Pub/Sub** -> **Topics**, select `credit-agreement-upload-topic`, choose **Delete**, and confirm.
 4. Open **IAM & Admin** -> **Service Accounts**, select `credit-agreement-ai`, choose **Delete**, and confirm.
 5. Delete the project from **IAM & Admin** -> **Settings** only if it contains no resources you need.
-

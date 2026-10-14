@@ -25,4 +25,8 @@ public class ExtractionResponse {
     private List<ReviewIssue> reviewIssues;
 
     private Double overallConfidence;
+
+    private String sourceBucket;
+
+    private String sourceFilePath;
 }

@@ -10,6 +10,7 @@ import com.db.hackathon.model.extraction.Deal;
 import com.db.hackathon.model.review.ReviewIssue;
 import com.db.hackathon.model.validation.ValidationResult;
 import com.db.hackathon.service.JsonSerializerService;
+import com.db.hackathon.service.PdfSourceService;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +27,7 @@ public class ReviewAgent implements WorkflowAgent {
     private final JsonSerializerService jsonSerializer;
     private final ReviewAnalyzer reviewAnalyzer;
     private final DealNormalizer dealNormalizer;
-    private final com.db.hackathon.agents.extraction.PageNumberResolver pageNumberResolver;
+    private final PdfSourceService pdfSourceService;
 
     @Override
     public AgentType getAgentType() {
@@ -53,21 +54,9 @@ public class ReviewAgent implements WorkflowAgent {
 
         String originalJson = jsonSerializer.serialize(deal);
 
-        if (context.getDocumentAnalysis() == null) {
-            log.warn("No document analysis available; keeping extracted deal without review");
-            context.setDeal(dealNormalizer.normalize(deal));
-            context.setReviewIssues(List.of());
-            context.setOverallConfidence(
-                    reviewAnalyzer.overallConfidence(
-                            jsonSerializer.readTree(originalJson), errorCount(context)));
-            return;
-        }
-
         Deal reviewed = runnerService.reviewAgreement(
-                context.getDocumentAnalysis(), originalJson, context.getValidationResult());
+                pdfSourceService.loadPdf(context), originalJson, context.getValidationResult());
         reviewed = dealNormalizer.normalize(reviewed);
-        // Deterministically resolve page numbers from sourceText; the LLM is unreliable here.
-        reviewed = pageNumberResolver.resolve(reviewed, context.getDocumentAnalysis());
         context.setDeal(reviewed);
 
         JsonNode originalTree = jsonSerializer.readTree(originalJson);

@@ -10,6 +10,7 @@ import com.db.hackathon.repository.WorkflowEventRepository;
 import com.db.hackathon.repository.WorkflowRepository;
 import com.db.hackathon.service.JsonSerializerService;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -104,7 +105,12 @@ public class WorkflowController {
                     if (workflow.getMetadata() == null || workflow.getMetadata().isBlank()) {
                         return ResponseEntity.noContent().build();
                     }
-                    return ResponseEntity.ok(jsonSerializer.readTree(workflow.getMetadata()));
+                    JsonNode metadata = jsonSerializer.readTree(workflow.getMetadata());
+                    if (metadata instanceof ObjectNode objectNode) {
+                        objectNode.remove("sourceBucket");
+                        objectNode.remove("sourceFilePath");
+                    }
+                    return ResponseEntity.ok(metadata);
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

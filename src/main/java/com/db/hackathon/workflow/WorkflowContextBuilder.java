@@ -3,8 +3,6 @@ package com.db.hackathon.workflow;
 import com.db.hackathon.dto.ExtractionResponse;
 import com.db.hackathon.dto.WorkflowContext;
 import com.db.hackathon.entity.WorkflowEntity;
-import com.db.hackathon.model.document.DocumentAnalysis;
-import com.db.hackathon.model.extraction.Deal;
 import com.db.hackathon.service.JsonSerializerService;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
@@ -32,33 +30,13 @@ public class WorkflowContextBuilder {
                         jsonSerializer.readTree(
                                 workflow.getMetadata());
 
-                context.setBucketName(node.get("bucket").asText());
-                context.setFilePath(node.get("name").asText());
+                context.setSourceBucket(node.get("bucket").asText());
+                context.setSourceFilePath(node.get("name").asText());
 
                 log.info("Context: {}", context);
             }
 
-            case PARSED -> {
-
-                DocumentAnalysis analysis =
-                        jsonSerializer.deserialize(
-                                workflow.getMetadata(),
-                                DocumentAnalysis.class);
-
-                context.setDocumentAnalysis(analysis);
-            }
-
-            case EXTRACTED -> {
-
-                Deal deal =
-                        jsonSerializer.deserialize(
-                                workflow.getMetadata(),
-                                Deal.class);
-
-                context.setDeal(deal);
-            }
-
-            case VALIDATED, REVIEWED -> {
+            case EXTRACTED, VALIDATED, REVIEWED -> {
 
                 ExtractionResponse response =
                         jsonSerializer.deserialize(
@@ -68,6 +46,8 @@ public class WorkflowContextBuilder {
                 context.setDeal(response.getDeal());
                 context.setReviewIssues(response.getReviewIssues());
                 context.setOverallConfidence(response.getOverallConfidence());
+                context.setSourceBucket(response.getSourceBucket());
+                context.setSourceFilePath(response.getSourceFilePath());
             }
 
             default -> {

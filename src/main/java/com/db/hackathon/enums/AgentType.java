@@ -4,8 +4,6 @@ public enum AgentType {
 
     UPLOAD,
 
-    DOCUMENT_PARSER,
-
     EXTRACTION,
 
     VALIDATION,

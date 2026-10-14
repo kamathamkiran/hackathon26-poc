@@ -20,13 +20,13 @@ The flow is split into three phases:
    - `AgreementSubscriber` reads the GCS event, creates the initial workflow row with status `UPLOADED`, and starts the workflow.
 
 3. **Process and poll**
-   - The workflow reads the PDF from GCS, processes it with Google Document AI and the LLM, validates and reviews the extracted deal, and persists each stage.
+   - The extraction agent reads the PDF from GCS and sends it directly to the LLM. The workflow then validates and reviews the extracted deal and persists each stage.
   - The external UI is expected to poll the workflow table and read the latest status and deal data.
 
 Current status progression:
 
 ```text
-UPLOADED -> PARSED -> EXTRACTED -> VALIDATED -> REVIEWED -> HUMAN_REVIEW_PENDING -> HUMAN_REVIEW_COMPLETED
+UPLOADED -> EXTRACTED -> VALIDATED -> REVIEWED -> HUMAN_REVIEW_PENDING -> HUMAN_REVIEW_COMPLETED
 ```
 
 `DEAL_CREATED` is defined but is not currently reached by the application.
@@ -100,7 +100,7 @@ google:
     subscription: agreement-upload-sub
 ```
 
-GCS notifications, the Pub/Sub topic, and the topic-to-subscription connection must be configured in Google Cloud outside this application. The application credentials must have access to GCS, Pub/Sub, and Document AI.
+GCS notifications, the Pub/Sub topic, and the topic-to-subscription connection must be configured in Google Cloud outside this application. The application credentials must have access to GCS and Pub/Sub.
 
 ## Persistence
 
@@ -127,7 +127,6 @@ The application runs on port `8080` by default.
 - Java 17
 - Spring Boot 3.1.0
 - Google Cloud Storage and Pub/Sub
-- Google Document AI
 - Google ADK / LLM extraction
 - Spring Data JPA
 - H2 database for local development

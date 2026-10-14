@@ -13,6 +13,9 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DealAdminAgent {
 
+    @Builder.Default
+    private String version = "1.0";
+
     private ExtractedField customerExternalId;
 
     private DealAdminServicingGroup dealAdminServicingGroup;

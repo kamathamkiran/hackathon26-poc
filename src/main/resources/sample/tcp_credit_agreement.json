@@ -1,0 +1,60 @@
+{
+  "dealId": "5ac99e3f-1f7f-4081-93ec-ba03a7594756",
+  "uuid": "5ac99e3f-1f7f-4081-93ec-ba03a7594756",
+  "borrowerName": "N/A",
+  "dealName": "tpc-arcreditagreement_compressed",
+  "fileName": "tpc-arcreditagreement_compressed.pdf",
+  "effectiveDate": "2026-07-02",
+  "totalAmount": "N/A",
+  "createdAt": "2026-10-14T15:48:04.622835300",
+  "totalFields": 16,
+  "approvedFields": 16,
+  "rejectedFields": 0,
+  "pendingFields": 0,
+  "status": "SIGNED_OFF",
+  "attributes": {
+    "Deal Name": "Amended and Restated Credit Agreement",
+    "Currency": "USD",
+    "Agreement Date": "2026-07-02",
+    "Facility Name": "Swing Line",
+    "Facility Type": "Swing Line",
+    "Closing Commitment": "10000000",
+    "Final Maturity Date": "2031-07-02",
+    "Facility Interest Pricing List / 0 / Option Name": "Base Rate",
+    "Facility Interest Pricing List / 1 / Option Name": "Base Rate",
+    "Facility Sublimit / Name": "Swing Line Sublimit"
+  },
+  "facilityList": [
+    {
+      "facilityName": "Revolving Credit Facility",
+      "facilityType": "Revolving Credit Facility",
+      "closingCommitment": "350000000.00",
+      "finalMaturityDate": "2031-07-02",
+      "facilityInterestPricingList": {
+        "0": {
+          "optionName": "Adjusted Term SOFR"
+        },
+        "1": {
+          "optionName": "Base Rate"
+        }
+      },
+      "facilitySublimit": {
+        "name": "Letter of Credit Sublimit"
+      }
+    },
+    {
+      "facilityName": "Swing Line",
+      "facilityType": "Swing Line",
+      "closingCommitment": "10000000",
+      "finalMaturityDate": "2031-07-02",
+      "facilityInterestPricingList": {
+        "0": {
+          "optionName": "Base Rate"
+        }
+      },
+      "facilitySublimit": {
+        "name": "Swing Line Sublimit"
+      }
+    }
+  ]
+}

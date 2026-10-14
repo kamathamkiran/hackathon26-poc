@@ -5,6 +5,7 @@ import com.db.hackathon.entity.WorkflowEventEntity;
 import com.db.hackathon.enums.AgentType;
 import com.db.hackathon.enums.EventStatus;
 import com.db.hackathon.enums.WorkflowStatus;
+import com.db.hackathon.dto.ExtractionResponse;
 import com.db.hackathon.repository.WorkflowEventRepository;
 import com.db.hackathon.repository.WorkflowRepository;
 import com.db.hackathon.service.JsonSerializerService;
@@ -31,10 +32,16 @@ public class WorkflowManager {
             WorkflowEntity workflow,
             WorkflowStatus status,
             AgentType completedAgent,
-            Object output) {
+            Object output,
+            String sourceBucket,
+            String sourceFilePath) {
 
         workflow.setStatus(status);
         workflow.setNextAgent(completedAgent);
+        if (output instanceof ExtractionResponse response) {
+            response.setSourceBucket(sourceBucket);
+            response.setSourceFilePath(sourceFilePath);
+        }
         workflow.setMetadata(jsonSerializer.serialize(output));
         workflowRepository.save(workflow);
     }
