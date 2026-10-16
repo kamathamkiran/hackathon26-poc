@@ -6,7 +6,6 @@ import com.db.hackathon.dto.ExtractionResponse;
 import com.db.hackathon.dto.WorkflowContext;
 import com.db.hackathon.enums.AgentType;
 import com.db.hackathon.enums.WorkflowStatus;
-import com.db.hackathon.model.extraction.Deal;
 import com.db.hackathon.model.review.ReviewIssue;
 import com.db.hackathon.model.validation.ValidationResult;
 import com.db.hackathon.service.JsonSerializerService;
@@ -36,7 +35,7 @@ public class ReviewAgent implements WorkflowAgent {
 
     @Override
     public WorkflowStatus getOutputStatus() {
-        return WorkflowStatus.REVIEWED;
+        return WorkflowStatus.HUMAN_REVIEW_PENDING;
     }
 
     @Override
@@ -44,7 +43,7 @@ public class ReviewAgent implements WorkflowAgent {
 
         log.info("Starting extraction review");
 
-        Deal deal = context.getDeal();
+        JsonNode deal = context.getDeal();
         if (deal == null) {
             log.warn("No extracted deal available; skipping review");
             context.setReviewIssues(List.of());
@@ -54,8 +53,10 @@ public class ReviewAgent implements WorkflowAgent {
 
         String originalJson = jsonSerializer.serialize(deal);
 
-        Deal reviewed = runnerService.reviewAgreement(
+        SemanticRunnerService.AgentResult<JsonNode> result = runnerService.reviewAgreement(
                 pdfSourceService.loadPdf(context), originalJson, context.getValidationResult());
+        context.setAgentTokenUsage(result.tokenUsage());
+        JsonNode reviewed = result.value();
         reviewed = dealNormalizer.normalize(reviewed);
         context.setDeal(reviewed);
 
@@ -70,6 +71,16 @@ public class ReviewAgent implements WorkflowAgent {
 
         log.info("Extraction review completed: {} field change(s), overall confidence {}",
                 reviewIssues.size(), overallConfidence);
+    }
+
+    public void refreshConfidence(WorkflowContext context) {
+        JsonNode deal = context.getDeal();
+        if (deal == null || deal.isNull()) {
+            context.setOverallConfidence(0.0);
+            return;
+        }
+        context.setOverallConfidence(
+                reviewAnalyzer.overallConfidence(deal, errorCount(context)));
     }
 
     private int errorCount(WorkflowContext context) {

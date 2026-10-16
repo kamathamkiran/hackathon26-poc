@@ -1,6 +1,5 @@
 package com.db.hackathon.entity;
 
-import com.db.hackathon.enums.AgentType;
 import com.db.hackathon.enums.WorkflowStatus;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -26,10 +25,6 @@ public class WorkflowEntity {
     @Column(nullable = false)
     private WorkflowStatus status;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "next_agent")
-    private AgentType nextAgent;
-
     @Column(name = "metadata", columnDefinition = "text")
     private String metadata;
 
@@ -38,6 +33,10 @@ public class WorkflowEntity {
 
     @Column(name = "failure_reason", columnDefinition = "text")
     private String failureReason;
+
+    @Column(name = "token_usage", nullable = false)
+    @Builder.Default
+    private Long tokenUsage = 0L;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -58,11 +57,4 @@ public class WorkflowEntity {
         updatedAt = LocalDateTime.now();
     }
 
-    public WorkflowEntity(String id, String opsUser, WorkflowStatus workflowStatus, AgentType agentType, String jsonOutput) {
-        this.workflowId = id;
-        this.username = opsUser;
-        this.status = workflowStatus;
-        this.nextAgent = agentType;
-        this.metadata = jsonOutput;
-    }
 }

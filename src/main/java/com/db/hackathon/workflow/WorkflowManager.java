@@ -11,10 +11,10 @@ import com.db.hackathon.repository.WorkflowRepository;
 import com.db.hackathon.service.JsonSerializerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 import static java.time.ZoneId.systemDefault;
 
@@ -28,16 +28,18 @@ public class WorkflowManager {
     private final WorkflowEventRepository workflowEventRepository;
     private final JsonSerializerService jsonSerializer;
 
+    public void saveWorkflowStatus(WorkflowEntity workflow) {
+        workflowRepository.save(workflow);
+    }
+
     public void saveCheckpoint(
             WorkflowEntity workflow,
             WorkflowStatus status,
-            AgentType completedAgent,
             Object output,
             String sourceBucket,
             String sourceFilePath) {
 
         workflow.setStatus(status);
-        workflow.setNextAgent(completedAgent);
         if (output instanceof ExtractionResponse response) {
             response.setSourceBucket(sourceBucket);
             response.setSourceFilePath(sourceFilePath);
@@ -56,9 +58,12 @@ public class WorkflowManager {
         workflowRepository.save(workflow);
     }
 
+    @Transactional
     public boolean incrementRetry(
             WorkflowEventEntity event,
-            String reason) {
+            String reason,
+            WorkflowEntity workflow,
+            long tokenUsage) {
 
         long durationMs = System.currentTimeMillis() - event.getCreatedAt().atZone(systemDefault()).toInstant().toEpochMilli();
 
@@ -66,20 +71,27 @@ public class WorkflowManager {
         event.setDurationMs(durationMs);
         event.setRetryCount(event.getRetryCount() + 1);
         event.setFailureReason(reason);
+        addTokenUsage(event, tokenUsage);
 
         workflowEventRepository.save(event);
+        updateWorkflowTokenUsage(workflow);
 
         return event.getRetryCount() < MAX_RETRY;
     }
 
+    @Transactional
     public void completeEvent(
             WorkflowEventEntity event,
-            long durationMs) {
+            long durationMs,
+            WorkflowEntity workflow,
+            long tokenUsage) {
 
         event.setStatus(EventStatus.SUCCESS);
         event.setDurationMs(durationMs);
+        addTokenUsage(event, tokenUsage);
 
         workflowEventRepository.save(event);
+        updateWorkflowTokenUsage(workflow);
     }
 
     public WorkflowEventEntity getOrCreateEvent(
@@ -93,11 +105,24 @@ public class WorkflowManager {
                 .orElseGet(() ->
                         workflowEventRepository.save(
                                 WorkflowEventEntity.builder()
-                                        .id(UUID.randomUUID().toString())
+                                        .id(agent.getWorkflowEventId())
                                         .workflowId(workflowId)
                                         .agent(agent)
                                         .status(EventStatus.STARTED)
                                         .retryCount(0)
                                         .build()));
+    }
+
+    private void addTokenUsage(WorkflowEventEntity event, long tokenUsage) {
+        long recordedUsage = event.getTokenUsage() == null ? 0 : event.getTokenUsage();
+        event.setTokenUsage(recordedUsage + Math.max(0, tokenUsage));
+    }
+
+    private void updateWorkflowTokenUsage(WorkflowEntity workflow) {
+        long totalUsage = workflowEventRepository.sumTokenUsageByWorkflowIdAndAgentIn(
+                workflow.getWorkflowId(),
+                List.of(AgentType.EXTRACTION, AgentType.REVIEW));
+        workflow.setTokenUsage(totalUsage);
+        workflowRepository.save(workflow);
     }
 }

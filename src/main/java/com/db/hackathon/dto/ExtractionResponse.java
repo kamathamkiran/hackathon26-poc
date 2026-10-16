@@ -1,8 +1,8 @@
 package com.db.hackathon.dto;
 
-import com.db.hackathon.model.extraction.Deal;
 import com.db.hackathon.model.review.ReviewIssue;
 import com.db.hackathon.model.validation.ValidationIssue;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,7 +18,7 @@ public class ExtractionResponse {
 
     private String workflowId;
 
-    private Deal deal;
+    private JsonNode deal;
 
     private List<ValidationIssue> validationIssues;
 

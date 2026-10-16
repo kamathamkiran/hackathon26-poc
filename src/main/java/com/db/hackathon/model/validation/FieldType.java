@@ -8,5 +8,7 @@ public enum FieldType {
 
     AMOUNT,
 
-    CURRENCY
+    CURRENCY,
+
+    ARRAY
 }

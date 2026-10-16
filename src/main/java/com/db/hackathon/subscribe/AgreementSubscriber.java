@@ -46,8 +46,7 @@ public class AgreementSubscriber {
             WorkflowEntity workflow = WorkflowEntity.builder()
                     .workflowId(uuid) //pass uuid available in metadata
                     .username(username)
-                    .status(WorkflowStatus.UPLOADED)
-                    .nextAgent(AgentType.EXTRACTION)
+                    .status(WorkflowStatus.EXTRACTING)
                     .metadata(fileMetadata.toString())
                     .build();
 

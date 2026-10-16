@@ -1,12 +1,13 @@
 package com.db.hackathon.agents.extraction;
 
 import com.db.hackathon.agents.WorkflowAgent;
+import com.db.hackathon.agents.review.DealNormalizer;
 import com.db.hackathon.enums.AgentType;
 import com.db.hackathon.enums.WorkflowStatus;
 import com.db.hackathon.dto.ExtractionResponse;
 import com.db.hackathon.dto.WorkflowContext;
-import com.db.hackathon.model.extraction.Deal;
 import com.db.hackathon.service.PdfSourceService;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -18,6 +19,7 @@ public class ExtractionAgent implements WorkflowAgent {
 
     private final SemanticRunnerService runnerService;
     private final PdfSourceService pdfSourceService;
+    private final DealNormalizer dealNormalizer;
 
     @Override
     public AgentType getAgentType() {
@@ -26,7 +28,7 @@ public class ExtractionAgent implements WorkflowAgent {
 
     @Override
     public WorkflowStatus getOutputStatus() {
-        return WorkflowStatus.EXTRACTED;
+        return WorkflowStatus.VALIDATING;
     }
 
     @Override
@@ -35,9 +37,11 @@ public class ExtractionAgent implements WorkflowAgent {
 
         log.info("Starting agreement extraction");
 
-        Deal deal = runnerService.extractAgreement(pdfSourceService.loadPdf(context));
+        SemanticRunnerService.AgentResult<JsonNode> result =
+                runnerService.extractAgreement(pdfSourceService.loadPdf(context));
 
-        context.setDeal(deal);
+        context.setDeal(dealNormalizer.normalize(result.value()));
+        context.setAgentTokenUsage(result.tokenUsage());
 
         log.info("Agreement extraction completed");
 

@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "workflow_event")
+@IdClass(WorkflowEventKey.class)
 @Getter
 @Setter
 @Builder
@@ -17,11 +18,12 @@ import java.time.LocalDateTime;
 public class WorkflowEventEntity {
 
     @Id
-    @Column(length = 36)
-    private String id;
-
     @Column(name = "workflow_id", nullable = false, length = 36)
     private String workflowId;
+
+    @Id
+    @Column(nullable = false)
+    private Integer id;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -38,6 +40,10 @@ public class WorkflowEventEntity {
     @Column(nullable = false)
     @Builder.Default
     private Long durationMs = 0L;
+
+    @Column(name = "token_usage", nullable = false)
+    @Builder.Default
+    private Long tokenUsage = 0L;
 
     @Lob
     @Column(name = "failure_reason")

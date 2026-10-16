@@ -28,7 +28,7 @@ public class ValidationAgent
 
     @Override
     public WorkflowStatus getOutputStatus() {
-        return WorkflowStatus.VALIDATED;
+        return WorkflowStatus.REVIEWING;
     }
 
     @Override
@@ -37,6 +37,7 @@ public class ValidationAgent
 
         log.info("Starting validation");
 
+        context.setDeal(validationService.calculateGlobalCommitmentIfMissing(context.getDeal()));
         ValidationResult result = validationService.validate(context.getDeal());
 
         context.setValidationResult(result);

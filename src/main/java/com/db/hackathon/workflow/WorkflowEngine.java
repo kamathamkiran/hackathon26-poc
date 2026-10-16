@@ -15,9 +15,10 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class WorkflowEngine {
 
+    private static final int MAX_REVIEW_LOOPS = 3;
+
     private final WorkflowContextBuilder contextBuilder;
     private final WorkflowExecutor executor;
-    private final WorkflowManager workflowManager;
 
     private final ExtractionAgent extractionAgent;
     private final ValidationAgent validationAgent;
@@ -33,32 +34,16 @@ public class WorkflowEngine {
 
             switch (workflow.getStatus()) {
 
-                case UPLOADED -> {
+                case EXTRACTING -> {
                     executor.execute(extractionAgent, context);
-                    executor.execute(validationAgent, context);
-                    executor.execute(reviewAgent, context);
-                    executor.execute(humanReviewAgent, context);
+                    validateAndReview(context);
                 }
 
-                case PARSED -> {
-                    workflowManager.markFailed(workflow,
-                            "This legacy PARSED workflow has no PDF source reference. Upload the agreement again.");
-                    log.error("Workflow {} is in the legacy PARSED state and cannot be resumed. Upload the agreement again.",
-                            workflow.getWorkflowId());
-                }
+                case VALIDATING, REVIEWING -> validateAndReview(context);
 
-                case EXTRACTED -> {
-                    executor.execute(validationAgent, context);
-                    executor.execute(reviewAgent, context);
-                    executor.execute(humanReviewAgent, context);
+                case UPLOADING, HUMAN_REVIEW_PENDING, COMPLETED, FAILED -> {
+                    // These states are not resumable processing stages.
                 }
-
-                case VALIDATED -> {
-                    executor.execute(reviewAgent, context);
-                    executor.execute(humanReviewAgent, context);
-                }
-
-                case REVIEWED -> executor.execute(humanReviewAgent, context);
 
             }
 
@@ -66,6 +51,30 @@ public class WorkflowEngine {
             log.error("Error executing workflow: {}", workflow.getWorkflowId(), e);
         }
 
+    }
+
+    private void validateAndReview(WorkflowContext context) throws Exception {
+        executor.execute(validationAgent, context);
+
+        for (int loop = 1; loop <= MAX_REVIEW_LOOPS; loop++) {
+            executor.execute(reviewAgent, context);
+            executor.execute(validationAgent, context);
+
+            if (context.getValidationResult() != null
+                    && context.getValidationResult().isValid()) {
+                log.info("Validation passed after review loop {} for workflow {}",
+                        loop, context.getWorkflow().getWorkflowId());
+                break;
+            }
+
+            if (loop == MAX_REVIEW_LOOPS) {
+                log.warn("Workflow {} still has validation errors after {} review loops",
+                        context.getWorkflow().getWorkflowId(), MAX_REVIEW_LOOPS);
+            }
+        }
+
+        reviewAgent.refreshConfidence(context);
+        executor.execute(humanReviewAgent, context);
     }
 
 

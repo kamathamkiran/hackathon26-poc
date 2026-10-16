@@ -1,8 +1,10 @@
 package com.db.hackathon.agents;
 
 import com.db.hackathon.model.validation.ValidationResult;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
@@ -13,19 +15,19 @@ import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class PromptBuilder {
 
     private static final String DEAL_JSON_SECTION = "\n\n=== EXTRACTED DEAL JSON ===\n";
     private static final String VALIDATION_SECTION = "\n\n=== VALIDATION ISSUES ===\n";
 
+    private final ObjectMapper objectMapper;
+
     private String extractionPrompt;
     private String reviewPrompt;
-    @Getter
-    private String instructionPrompt;
 
     @PostConstruct
     void loadPrompts() {
-        instructionPrompt = read("instruction.md");
         extractionPrompt = read("extraction.md");
         reviewPrompt = read("review.md");
         log.info("Loaded extraction and review prompt templates");
@@ -40,7 +42,9 @@ public class PromptBuilder {
                 + DEAL_JSON_SECTION
                 + dealJson
                 + VALIDATION_SECTION
-                + (validationIssuesJson == null ? "[]" : validationIssuesJson);
+                + (validationIssuesJson == null
+                ? "[]"
+                : objectMapper.valueToTree(validationIssuesJson).toPrettyString());
     }
 
     private String read(String file) {

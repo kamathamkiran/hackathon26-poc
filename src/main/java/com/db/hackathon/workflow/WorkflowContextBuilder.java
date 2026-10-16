@@ -24,7 +24,7 @@ public class WorkflowContextBuilder {
 
         switch (workflow.getStatus()) {
 
-            case UPLOADED -> {
+            case EXTRACTING -> {
 
                 JsonNode node =
                         jsonSerializer.readTree(
@@ -36,12 +36,10 @@ public class WorkflowContextBuilder {
                 log.info("Context: {}", context);
             }
 
-            case EXTRACTED, VALIDATED, REVIEWED -> {
+            case VALIDATING, REVIEWING -> {
 
-                ExtractionResponse response =
-                        jsonSerializer.deserialize(
-                                workflow.getMetadata(),
-                                ExtractionResponse.class);
+                ExtractionResponse response = jsonSerializer.deserialize(
+                        workflow.getMetadata(), ExtractionResponse.class);
 
                 context.setDeal(response.getDeal());
                 context.setReviewIssues(response.getReviewIssues());

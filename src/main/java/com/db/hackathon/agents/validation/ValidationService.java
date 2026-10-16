@@ -1,21 +1,18 @@
 package com.db.hackathon.agents.validation;
 
 import com.db.hackathon.enums.ValidationCode;
-import com.db.hackathon.model.extraction.Deal;
-import com.db.hackathon.model.extraction.ExtractedField;
-import com.db.hackathon.model.extraction.Facility;
-import com.db.hackathon.model.extraction.FacilityInterestPricing;
-import com.db.hackathon.model.extraction.InterestPricingOption;
 import com.db.hackathon.model.validation.FieldRule;
+import com.db.hackathon.model.validation.FieldType;
 import com.db.hackathon.model.validation.ValidationIssue;
 import com.db.hackathon.model.validation.ValidationResult;
 import com.db.hackathon.model.validation.ValidationRuleSet;
 import com.db.hackathon.model.validation.ValidationSeverity;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -34,15 +31,83 @@ public class ValidationService {
 
     private final ValidationRuleProvider ruleProvider;
 
-    public ValidationResult validate(Deal deal) {
+    public JsonNode calculateGlobalCommitmentIfMissing(JsonNode deal) {
+        if (deal == null || !deal.isObject()) {
+            return deal;
+        }
+
+        JsonNode currentGlobal = deal.get("globalDealProposedCommitmentAmount");
+        if (text(currentGlobal) != null) {
+            return deal;
+        }
+
+        String currency = text(deal.get("currency"));
+        JsonNode facilities = array(deal, "facilityList");
+        if (currency == null || facilities == null || facilities.isEmpty()) {
+            return deal;
+        }
+
+        BigDecimal total = BigDecimal.ZERO;
+        double confidence = 1.0;
+        Integer pageNumber = null;
+        boolean pagesMatch = true;
+        StringBuilder sourceText = new StringBuilder();
+        for (JsonNode facility : facilities) {
+            JsonNode amount = facility.get("proposedCommitmentAmount");
+            BigDecimal value = parseAmount(amount);
+            JsonNode quote = amount != null && amount.isObject() ? amount.get("sourceText") : null;
+            JsonNode amountConfidence = amount != null && amount.isObject()
+                    ? amount.get("confidence") : null;
+            JsonNode amountPage = amount != null && amount.isObject()
+                    ? amount.get("pageNumber") : null;
+            if (value == null || quote == null || !quote.isTextual() || quote.asText().isBlank()
+                    || amountConfidence == null || !amountConfidence.isNumber()
+                    || amountConfidence.doubleValue() < 0.0 || amountConfidence.doubleValue() > 1.0) {
+                log.debug("Cannot calculate global commitment: facility amount/evidence is incomplete");
+                return deal;
+            }
+
+            total = total.add(value);
+            confidence = Math.min(confidence, amountConfidence.doubleValue());
+            Integer facilityPage = amountPage != null && amountPage.canConvertToInt()
+                    ? amountPage.intValue() : null;
+            if (sourceText.isEmpty()) {
+                pageNumber = facilityPage;
+            } else if (facilityPage == null || !facilityPage.equals(pageNumber)) {
+                pagesMatch = false;
+                sourceText.append("; ");
+            } else {
+                sourceText.append("; ");
+            }
+            sourceText.append(quote.asText());
+        }
+
+        ObjectNode calculated = ((ObjectNode) deal).deepCopy();
+        ObjectNode global = calculated.putObject("globalDealProposedCommitmentAmount");
+        global.put("value", total.stripTrailingZeros().toPlainString());
+        if (pagesMatch && pageNumber != null) {
+            global.put("pageNumber", pageNumber);
+        } else {
+            global.putNull("pageNumber");
+        }
+        global.put("confidence", confidence);
+        global.put("sourceText", sourceText.toString());
+        log.info("Calculated missing global proposed commitment as {} {}", total, currency);
+        return calculated;
+    }
+
+    public ValidationResult validate(JsonNode deal) {
         List<ValidationIssue> errors = new ArrayList<>();
         List<ValidationIssue> warnings = new ArrayList<>();
 
-        if (deal == null) {
+        if (deal == null || deal.isNull()) {
             log.warn("Validation invoked with a null deal");
             errors.add(issue("deal", ValidationCode.MISSING_FIELD, ValidationSeverity.ERROR,
                     "No extracted deal data was available for validation", null));
             return ValidationResult.builder().valid(false).errors(errors).warnings(warnings).build();
+        }
+        if (!deal.isObject()) {
+            throw new IllegalArgumentException("Deal JSON must be an object");
         }
 
         applyDeclarativeRules(deal, errors, warnings);
@@ -62,63 +127,64 @@ public class ValidationService {
                 .build();
     }
 
-    private void applyDeclarativeRules(Deal deal, List<ValidationIssue> errors, List<ValidationIssue> warnings) {
+    private void applyDeclarativeRules(JsonNode deal, List<ValidationIssue> errors,
+                                       List<ValidationIssue> warnings) {
         ValidationRuleSet rules = ruleProvider.ruleSet();
 
         applySection(rules.section("deal"), deal, "", errors, warnings);
-        applySection(rules.section("dealBorrower"), deal.getDealBorrower(),
+        applySection(rules.section("dealBorrower"), deal.get("dealBorrower"),
                 "dealBorrower.", errors, warnings);
-        applySection(rules.section("dealAdminAgent"), deal.getDealAdminAgent(),
+        applySection(rules.section("dealAdminAgent"), deal.get("dealAdminAgent"),
                 "dealAdminAgent.", errors, warnings);
-        applySection(rules.section("dealAdminServicingGroup"),
-                deal.getDealAdminAgent() == null ? null : deal.getDealAdminAgent().getDealAdminServicingGroup(),
-                "dealAdminAgent.dealAdminServicingGroup.", errors, warnings);
 
-        List<InterestPricingOption> options = deal.getInterestPricingOptions();
+        JsonNode options = array(deal, "interestPricingOptions");
         if (options != null) {
-            for (int k = 0; k < options.size(); k++) {
-                applySection(rules.section("interestPricingOption"), options.get(k),
-                        "interestPricingOptions[" + k + "].", errors, warnings);
+            for (int i = 0; i < options.size(); i++) {
+                applySection(rules.section("interestPricingOption"), options.get(i),
+                        "interestPricingOptions[" + i + "].", errors, warnings);
             }
         }
 
-        List<Facility> facilities = deal.getFacilityList();
+        JsonNode facilities = array(deal, "facilityList");
         if (facilities != null) {
             log.debug("Applying declarative rules to {} facility/facilities", facilities.size());
             for (int i = 0; i < facilities.size(); i++) {
-                Facility facility = facilities.get(i);
+                JsonNode facility = facilities.get(i);
                 String prefix = "facilityList[" + i + "].";
-
                 applySection(rules.section("facility"), facility, prefix, errors, warnings);
-                applySection(rules.section("risk"), facility.getRisk(),
-                        prefix + "risk.", errors, warnings);
-                applySection(rules.section("loanPurpose"), facility.getLoanPurpose(),
-                        prefix + "loanPurpose.", errors, warnings);
+                applySection(rules.section("facilitySublimit"), facility.get("facilitySublimit"),
+                        prefix + "facilitySublimit.", errors, warnings);
 
-                List<FacilityInterestPricing> pricingList = facility.getFacilityInterestPricingList();
-                if (pricingList != null) {
-                    for (int j = 0; j < pricingList.size(); j++) {
-                        applySection(rules.section("pricing"), pricingList.get(j),
-                                prefix + "facilityInterestPricingList[" + j + "].", errors, warnings);
+                JsonNode pricing = array(facility, "facilityInterestPricingList");
+                if (pricing != null) {
+                    for (int j = 0; j < pricing.size(); j++) {
+                        applySection(rules.section("pricing"), pricing.get(j),
+                                prefix + "facilityInterestPricingList[" + j + "].",
+                                errors, warnings);
                     }
                 }
             }
         }
     }
 
-    private void applySection(List<FieldRule> rules, Object target, String prefix,
+    private void applySection(List<FieldRule> rules, JsonNode target, String prefix,
                               List<ValidationIssue> errors, List<ValidationIssue> warnings) {
         if (rules == null) {
             return;
         }
         for (FieldRule rule : rules) {
-            ExtractedField field = readField(target, rule.getField());
+            JsonNode field = target == null ? null : target.get(rule.getField());
             applyRule(rule, field, prefix + rule.getField(), errors, warnings);
         }
     }
 
-    private void applyRule(FieldRule rule, ExtractedField field, String path,
+    private void applyRule(FieldRule rule, JsonNode field, String path,
                            List<ValidationIssue> errors, List<ValidationIssue> warnings) {
+        if (rule.getType() == FieldType.ARRAY) {
+            validateArray(rule, field, path, errors);
+            return;
+        }
+
         String value = text(field);
 
         if (value == null) {
@@ -133,19 +199,41 @@ public class ValidationService {
             case CURRENCY -> validateCurrency(rule, value, path, field, errors);
             case DATE -> validateDate(rule, field, value, path, errors);
             case AMOUNT -> validateAmount(rule, field, value, path, errors);
-            case STRING -> { }
+            case STRING, ARRAY -> { }
         }
 
         if (rule.getMaxLength() != null && value.length() > rule.getMaxLength()) {
             errors.add(issue(path, ValidationCode.OUT_OF_RANGE, ValidationSeverity.ERROR,
-                    rule.getLabel() + " exceeds maximum length of " + rule.getMaxLength(), page(field)));
+                    rule.getLabel() + " exceeds maximum length of " + rule.getMaxLength(),
+                    page(field)));
         }
 
         lowConfidence(rule, field, path, warnings);
     }
 
-    private void validateCurrency(FieldRule rule, String value, String path,
-                                  ExtractedField field, List<ValidationIssue> errors) {
+    private void validateArray(FieldRule rule, JsonNode field, String path,
+                               List<ValidationIssue> errors) {
+        if (field == null || field.isNull()) {
+            if (rule.isMandatory()) {
+                errors.add(issue(path, ValidationCode.MISSING_FIELD, ValidationSeverity.ERROR,
+                        rule.getLabel() + " is mandatory", null));
+            }
+            return;
+        }
+        if (!field.isArray()) {
+            errors.add(issue(path, ValidationCode.MISSING_FIELD, ValidationSeverity.ERROR,
+                    rule.getLabel() + " must be a JSON array", null));
+            return;
+        }
+        if (rule.getMinItems() != null && field.size() < rule.getMinItems()) {
+            errors.add(issue(path, ValidationCode.MISSING_FIELD, ValidationSeverity.ERROR,
+                    "At least " + rule.getMinItems() + " " + rule.getLabel()
+                            + " is required for this facility", null));
+        }
+    }
+
+    private void validateCurrency(FieldRule rule, String value, String path, JsonNode field,
+                                  List<ValidationIssue> errors) {
         List<String> allowed = rule.getAllowedValues();
         if (allowed != null && !allowed.isEmpty()
                 && allowed.stream().noneMatch(v -> v.equalsIgnoreCase(value))) {
@@ -155,15 +243,16 @@ public class ValidationService {
         }
     }
 
-    private void validateDate(FieldRule rule, ExtractedField field, String value, String path,
+    private void validateDate(FieldRule rule, JsonNode field, String value, String path,
                               List<ValidationIssue> errors) {
         if (parseIso(field) == null) {
             errors.add(issue(path, ValidationCode.INVALID_DATE, ValidationSeverity.ERROR,
-                    rule.getLabel() + " '" + value + "' must be an ISO date (yyyy-MM-dd)", page(field)));
+                    rule.getLabel() + " '" + value + "' must be an ISO date (yyyy-MM-dd)",
+                    page(field)));
         }
     }
 
-    private void validateAmount(FieldRule rule, ExtractedField field, String value, String path,
+    private void validateAmount(FieldRule rule, JsonNode field, String value, String path,
                                 List<ValidationIssue> errors) {
         BigDecimal amount = parseAmount(field);
         if (amount == null) {
@@ -180,26 +269,31 @@ public class ValidationService {
         }
     }
 
-    private void lowConfidence(FieldRule rule, ExtractedField field, String path,
+    private void lowConfidence(FieldRule rule, JsonNode field, String path,
                                List<ValidationIssue> warnings) {
+        JsonNode confidence = field != null && field.isObject() ? field.get("confidence") : null;
         double threshold = ruleProvider.ruleSet().getLowConfidenceThreshold();
-        if (field != null && field.getConfidence() != null && field.getConfidence() < threshold) {
+        if (confidence != null && confidence.isNumber() && confidence.doubleValue() < threshold) {
             warnings.add(issue(path, ValidationCode.LOW_CONFIDENCE, ValidationSeverity.WARNING,
                     rule.getLabel() + " has low extraction confidence ("
-                            + field.getConfidence() + "); please verify", page(field)));
+                            + confidence.doubleValue() + "); please verify", page(field)));
         }
     }
 
-    private void applyBusinessRules(Deal deal, List<ValidationIssue> errors, List<ValidationIssue> warnings) {
-        requireAtLeastOneFacility(deal, errors);
-        validateCommitmentTotal(deal, warnings);
+    private void applyBusinessRules(JsonNode deal, List<ValidationIssue> errors,
+                                    List<ValidationIssue> warnings) {
+        JsonNode facilities = array(deal, "facilityList");
+        if (facilities == null || facilities.size() == 0) {
+            errors.add(issue("facilityList", ValidationCode.MISSING_FIELD, ValidationSeverity.ERROR,
+                    "At least one Facility is required", null));
+        }
 
-        List<Facility> facilities = deal.getFacilityList();
         if (facilities == null) {
             return;
         }
+        validateCommitmentTotal(deal, facilities, warnings);
         for (int i = 0; i < facilities.size(); i++) {
-            Facility facility = facilities.get(i);
+            JsonNode facility = facilities.get(i);
             String prefix = "facilityList[" + i + "]";
 
             validateDateOrder(prefix, facility, errors);
@@ -207,25 +301,18 @@ public class ValidationService {
             validateTermLoanExpiry(prefix, facility, errors);
             validatePricingRateBasis(prefix, facility, errors);
         }
-
         validateCrossCurrency(deal, warnings);
     }
 
-    private void requireAtLeastOneFacility(Deal deal, List<ValidationIssue> errors) {
-        if (deal.getFacilityList() == null || deal.getFacilityList().isEmpty()) {
-            errors.add(issue("facilityList", ValidationCode.MISSING_FIELD, ValidationSeverity.ERROR,
-                    "At least one Facility is required", null));
-        }
-    }
-
-    private void validateCommitmentTotal(Deal deal, List<ValidationIssue> warnings) {
-        BigDecimal global = parseAmount(deal.getGlobalDealProposedCommitmentAmount());
-        if (global == null || deal.getFacilityList() == null || deal.getFacilityList().isEmpty()) {
+    private void validateCommitmentTotal(JsonNode deal, JsonNode facilities,
+                                         List<ValidationIssue> warnings) {
+        BigDecimal global = parseAmount(deal.get("globalDealProposedCommitmentAmount"));
+        if (global == null || facilities.isEmpty()) {
             return;
         }
         BigDecimal total = BigDecimal.ZERO;
-        for (Facility facility : deal.getFacilityList()) {
-            BigDecimal amount = parseAmount(facility.getProposedCommitmentAmount());
+        for (JsonNode facility : facilities) {
+            BigDecimal amount = parseAmount(facility.get("proposedCommitmentAmount"));
             if (amount == null) {
                 return;
             }
@@ -239,17 +326,17 @@ public class ValidationService {
         }
     }
 
-    private void validateDateOrder(String prefix, Facility facility, List<ValidationIssue> errors) {
-        compareOrder(prefix, "agreementDate", facility.getAgreementDate(),
-                "effectiveDate", facility.getEffectiveDate(), errors);
-        compareOrder(prefix, "effectiveDate", facility.getEffectiveDate(),
-                "expiryDate", facility.getExpiryDate(), errors);
-        compareOrder(prefix, "expiryDate", facility.getExpiryDate(),
-                "finalMaturityDate", facility.getFinalMaturityDate(), errors);
+    private void validateDateOrder(String prefix, JsonNode facility, List<ValidationIssue> errors) {
+        compareOrder(prefix, "agreementDate", facility.get("agreementDate"),
+                "effectiveDate", facility.get("effectiveDate"), errors);
+        compareOrder(prefix, "effectiveDate", facility.get("effectiveDate"),
+                "expiryDate", facility.get("expiryDate"), errors);
+        compareOrder(prefix, "expiryDate", facility.get("expiryDate"),
+                "finalMaturityDate", facility.get("finalMaturityDate"), errors);
     }
 
-    private void compareOrder(String prefix, String earlierName, ExtractedField earlier,
-                              String laterName, ExtractedField later, List<ValidationIssue> errors) {
+    private void compareOrder(String prefix, String earlierName, JsonNode earlier,
+                              String laterName, JsonNode later, List<ValidationIssue> errors) {
         LocalDate earlierDate = parseIso(earlier);
         LocalDate laterDate = parseIso(later);
         if (earlierDate != null && laterDate != null && laterDate.isBefore(earlierDate)) {
@@ -259,54 +346,69 @@ public class ValidationService {
         }
     }
 
-    private void validateClosingWithinProposed(String prefix, Facility facility, List<ValidationIssue> errors) {
-        BigDecimal closing = parseAmount(facility.getClosingCommitment());
-        BigDecimal proposed = parseAmount(facility.getProposedCommitmentAmount());
+    private void validateClosingWithinProposed(String prefix, JsonNode facility,
+                                               List<ValidationIssue> errors) {
+        JsonNode closingField = facility.get("closingCommitment");
+        BigDecimal closing = parseAmount(closingField);
+        BigDecimal proposed = parseAmount(facility.get("proposedCommitmentAmount"));
         if (closing != null && proposed != null && closing.compareTo(proposed) > 0) {
             errors.add(issue(prefix + ".closingCommitment", ValidationCode.BUSINESS_RULE,
                     ValidationSeverity.ERROR,
-                    "Closing Commitment must not exceed Proposed Commitment",
-                    page(facility.getClosingCommitment())));
+                    "Closing Commitment must not exceed Proposed Commitment", page(closingField)));
         }
     }
 
-    private void validateTermLoanExpiry(String prefix, Facility facility, List<ValidationIssue> errors) {
-        String type = text(facility.getFacilityType());
+    private void validateTermLoanExpiry(String prefix, JsonNode facility,
+                                        List<ValidationIssue> errors) {
+        JsonNode typeField = facility.get("facilityType");
+        String type = text(typeField);
         if (type != null && type.toLowerCase().contains("term loan")
-                && text(facility.getExpiryDate()) == null) {
+                && text(facility.get("expiryDate")) == null) {
             errors.add(issue(prefix + ".expiryDate", ValidationCode.BUSINESS_RULE,
-                    ValidationSeverity.ERROR,
-                    "Expiry Date is required for a Term Loan facility",
-                    page(facility.getFacilityType())));
+                    ValidationSeverity.ERROR, "Expiry Date is required for a Term Loan facility",
+                    page(typeField)));
         }
     }
 
-    private void validatePricingRateBasis(String prefix, Facility facility, List<ValidationIssue> errors) {
-        List<FacilityInterestPricing> pricingList = facility.getFacilityInterestPricingList();
+    private void validatePricingRateBasis(String prefix, JsonNode facility,
+                                          List<ValidationIssue> errors) {
+        JsonNode pricingList = array(facility, "facilityInterestPricingList");
         if (pricingList == null) {
             return;
         }
-        for (int j = 0; j < pricingList.size(); j++) {
-            FacilityInterestPricing pricing = pricingList.get(j);
-            if (text(pricing.getBaseRate()) != null && text(pricing.getRateBasis()) == null) {
-                errors.add(issue(prefix + ".facilityInterestPricingList[" + j + "].rateBasis",
+        for (int i = 0; i < pricingList.size(); i++) {
+            JsonNode pricing = pricingList.get(i);
+            JsonNode baseRate = pricing.get("baseRate");
+            if (text(baseRate) != null && text(pricing.get("rateBasis")) == null) {
+                errors.add(issue(prefix + ".facilityInterestPricingList[" + i + "].rateBasis",
                         ValidationCode.BUSINESS_RULE, ValidationSeverity.ERROR,
                         "Rate Basis is required when an indexed Base Rate is present",
-                        page(pricing.getBaseRate())));
+                        page(baseRate)));
             }
         }
     }
 
-    private void validateCrossCurrency(Deal deal, List<ValidationIssue> warnings) {
-        String dealCurrency = text(deal.getCurrency());
-        if (dealCurrency == null || deal.getFacilityList() == null) {
-            return;
-        }
-        if (!"USD".equalsIgnoreCase(dealCurrency)) {
+    private void validateCrossCurrency(JsonNode deal, List<ValidationIssue> warnings) {
+        String dealCurrency = text(deal.get("currency"));
+        if (dealCurrency != null && !"USD".equalsIgnoreCase(dealCurrency)) {
             warnings.add(issue("currency", ValidationCode.BUSINESS_RULE, ValidationSeverity.WARNING,
                     "Deal currency is " + dealCurrency
                             + "; confirm each facility currency matches the deal currency", null));
         }
+    }
+
+    private JsonNode array(JsonNode object, String property) {
+        if (object == null || object.isNull()) {
+            return null;
+        }
+        JsonNode value = object.get(property);
+        if (value == null || value.isNull()) {
+            return null;
+        }
+        if (!value.isArray()) {
+            throw new IllegalArgumentException(property + " must be a JSON array");
+        }
+        return value;
     }
 
     private ValidationIssue issue(String field, ValidationCode code, ValidationSeverity severity,
@@ -320,34 +422,27 @@ public class ValidationService {
                 .build();
     }
 
-    private ExtractedField readField(Object target, String property) {
-        if (target == null || property == null || property.isEmpty()) {
+    private String text(JsonNode field) {
+        if (field == null || field.isNull()) {
             return null;
         }
-        try {
-            String getter = "get" + Character.toUpperCase(property.charAt(0)) + property.substring(1);
-            Method method = target.getClass().getMethod(getter);
-            Object value = method.invoke(target);
-            return value instanceof ExtractedField extracted ? extracted : null;
-        } catch (ReflectiveOperationException ex) {
-            log.debug("Could not read field '{}' from {}: {}", property,
-                    target.getClass().getSimpleName(), ex.getMessage());
+        JsonNode value = field.isObject() ? field.get("value") : field;
+        if (value == null || value.isNull()) {
             return null;
         }
+        String text = value.asText().trim();
+        return text.isEmpty() ? null : text;
     }
 
-    private String text(ExtractedField field) {
-        if (field == null || field.getValue() == null || field.getValue().isBlank()) {
+    private Integer page(JsonNode field) {
+        if (field == null || !field.isObject()) {
             return null;
         }
-        return field.getValue().trim();
+        JsonNode page = field.get("pageNumber");
+        return page != null && page.canConvertToInt() ? page.intValue() : null;
     }
 
-    private Integer page(ExtractedField field) {
-        return field == null ? null : field.getPageNumber();
-    }
-
-    private LocalDate parseIso(ExtractedField field) {
+    private LocalDate parseIso(JsonNode field) {
         String value = text(field);
         if (value == null) {
             return null;
@@ -359,7 +454,7 @@ public class ValidationService {
         }
     }
 
-    private BigDecimal parseAmount(ExtractedField field) {
+    private BigDecimal parseAmount(JsonNode field) {
         String value = text(field);
         if (value == null) {
             return null;

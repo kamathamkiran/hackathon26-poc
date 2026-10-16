@@ -30,7 +30,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/workflow")
@@ -50,9 +49,19 @@ public class WorkflowController {
             @RequestParam("username") String username,
             @RequestParam("file") MultipartFile file) {
 
+        if (workflowRepository.existsById(uuid)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Workflow UUID already exists.");
+        }
+
+        workflowRepository.save(WorkflowEntity.builder()
+                .workflowId(uuid)
+                .username(username)
+                .status(WorkflowStatus.UPLOADING)
+                .build());
+
         LocalDateTime startedAt = LocalDateTime.now();
         WorkflowEventEntity uploadEvent = WorkflowEventEntity.builder()
-                .id(UUID.randomUUID().toString())
+                .id(AgentType.UPLOAD.getWorkflowEventId())
                 .workflowId(uuid)
                 .agent(AgentType.UPLOAD)
                 .status(EventStatus.STARTED)
@@ -67,6 +76,12 @@ public class WorkflowController {
             uploadEvent.setStatus(EventStatus.SUCCESS);
             uploadEvent.setDurationMs(Duration.between(startedAt, LocalDateTime.now()).toMillis());
             workflowEventRepository.save(uploadEvent);
+            workflowRepository.transitionStatus(
+                    uuid,
+                    WorkflowStatus.UPLOADING,
+                    WorkflowStatus.EXTRACTING,
+                    null,
+                    LocalDateTime.now());
             return ResponseEntity.ok("File uploaded successfully: " + fileUrl);
 
         } catch (Exception e) {
@@ -74,6 +89,12 @@ public class WorkflowController {
             uploadEvent.setFailureReason(e.getMessage());
             uploadEvent.setDurationMs(Duration.between(startedAt, LocalDateTime.now()).toMillis());
             workflowEventRepository.save(uploadEvent);
+            workflowRepository.transitionStatus(
+                    uuid,
+                    WorkflowStatus.UPLOADING,
+                    WorkflowStatus.FAILED,
+                    e.getMessage(),
+                    LocalDateTime.now());
             return ResponseEntity.badRequest()
                     .body("Upload failed: " + e.getMessage());
         }
@@ -96,8 +117,7 @@ public class WorkflowController {
         return workflowRepository.findById(uuid)
                 .<ResponseEntity<?>>map(workflow -> {
                     if (workflow.getStatus() != WorkflowStatus.HUMAN_REVIEW_PENDING
-                            && workflow.getStatus() != WorkflowStatus.HUMAN_REVIEW_COMPLETED
-                            && workflow.getStatus() != WorkflowStatus.DEAL_CREATED) {
+                            && workflow.getStatus() != WorkflowStatus.COMPLETED) {
                         return ResponseEntity.status(HttpStatus.CONFLICT)
                                 .body(Map.of("message", "Workflow output is not ready", "status",
                                         workflow.getStatus().name()));
@@ -126,7 +146,7 @@ public class WorkflowController {
             log.warn("Human sign-off rejected for unknown workflow {}", uuid);
             return ResponseEntity.notFound().build();
         }
-        if (workflow.getStatus() == WorkflowStatus.HUMAN_REVIEW_COMPLETED) {
+        if (workflow.getStatus() == WorkflowStatus.COMPLETED) {
             log.info("Workflow {} was already signed off", uuid);
             return ResponseEntity.ok(signOffPayload(workflow));
         }
@@ -167,8 +187,7 @@ public class WorkflowController {
         reviewEvent.setFailureReason(null);
 
         workflow.setHumanJson(jsonSerializer.serialize(reviewOutput));
-        workflow.setStatus(WorkflowStatus.HUMAN_REVIEW_COMPLETED);
-        workflow.setNextAgent(null);
+        workflow.setStatus(WorkflowStatus.COMPLETED);
         workflow.setCompletedAt(completedAt);
 
         workflowEventRepository.save(reviewEvent);
@@ -190,11 +209,10 @@ public class WorkflowController {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("uuid", uuid);
         payload.put("status", workflow == null
-                ? (latestEvent.getStatus() == EventStatus.FAILED ? "FAILED"
-                        : latestEvent.getStatus() == EventStatus.SUCCESS ? "UPLOADED" : "UPLOADING")
+                ? (latestEvent.getStatus() == EventStatus.FAILED ? WorkflowStatus.FAILED.name()
+                        : latestEvent.getStatus() == EventStatus.SUCCESS ? WorkflowStatus.EXTRACTING.name()
+                        : WorkflowStatus.UPLOADING.name())
                 : workflow.getStatus().name());
-        payload.put("nextAgent",
-                workflow == null || workflow.getNextAgent() == null ? null : workflow.getNextAgent().name());
         payload.put("username", workflow == null ? null : workflow.getUsername());
         payload.put("updatedAt", workflow != null && workflow.getUpdatedAt() != null
                 ? workflow.getUpdatedAt().toString()
@@ -211,6 +229,8 @@ public class WorkflowController {
         payload.put("eventFailureReason", latestEvent != null && latestEvent.getStatus() == EventStatus.FAILED
                 ? latestEvent.getFailureReason()
                 : null);
+        payload.put("token_usage", workflow == null ? 0L : workflow.getTokenUsage());
+        payload.put("event_token_usage", latestEvent == null ? 0L : latestEvent.getTokenUsage());
         return payload;
     }
 }

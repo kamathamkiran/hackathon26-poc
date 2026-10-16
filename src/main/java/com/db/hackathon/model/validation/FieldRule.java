@@ -21,6 +21,8 @@ public class FieldRule {
 
     private Integer maxLength;
 
+    private Integer minItems;
+
     private boolean positive;
 
     private boolean nonNegative;

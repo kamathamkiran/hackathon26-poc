@@ -2,21 +2,17 @@ package com.db.hackathon.enums;
 
 public enum WorkflowStatus {
 
-    UPLOADED,
+    UPLOADING,
 
-    PARSED,
+    EXTRACTING,
 
-    EXTRACTED,
+    VALIDATING,
 
-    VALIDATED,
-
-    REVIEWED,
+    REVIEWING,
 
     HUMAN_REVIEW_PENDING,
 
-    HUMAN_REVIEW_COMPLETED,
-
-    DEAL_CREATED,
+    COMPLETED,
 
     FAILED
 }

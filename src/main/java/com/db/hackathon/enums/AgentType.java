@@ -2,13 +2,23 @@ package com.db.hackathon.enums;
 
 public enum AgentType {
 
-    UPLOAD,
+    UPLOAD(1),
 
-    EXTRACTION,
+    EXTRACTION(2),
 
-    VALIDATION,
+    VALIDATION(3),
 
-    REVIEW,
+    REVIEW(4),
 
-    HUMAN_REVIEW
+    HUMAN_REVIEW(5);
+
+    private final int workflowEventId;
+
+    AgentType(int workflowEventId) {
+        this.workflowEventId = workflowEventId;
+    }
+
+    public int getWorkflowEventId() {
+        return workflowEventId;
+    }
 }

@@ -1,9 +1,9 @@
 package com.db.hackathon.dto;
 
 import com.db.hackathon.entity.WorkflowEntity;
-import com.db.hackathon.model.extraction.Deal;
 import com.db.hackathon.model.review.ReviewIssue;
 import com.db.hackathon.model.validation.ValidationResult;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Builder;
 import lombok.Data;
 
@@ -21,13 +21,15 @@ public class WorkflowContext {
 
     private byte[] pdfBytes;
 
-    private Deal deal;
+    private JsonNode deal;
 
     private ValidationResult validationResult;
 
     private List<ReviewIssue> reviewIssues;
 
     private Double overallConfidence;
+
+    private long agentTokenUsage;
 
     private String dealDataJson;
 }

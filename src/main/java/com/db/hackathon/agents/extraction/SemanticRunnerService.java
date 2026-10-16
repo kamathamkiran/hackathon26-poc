@@ -2,7 +2,6 @@ package com.db.hackathon.agents.extraction;
 
 import com.db.hackathon.agents.PromptBuilder;
 import com.db.hackathon.model.validation.ValidationResult;
-import com.db.hackathon.model.extraction.Deal;
 import com.google.adk.agents.RunConfig;
 import com.google.adk.artifacts.InMemoryArtifactService;
 import com.google.adk.events.Event;
@@ -20,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 
 @Slf4j
 @Service
@@ -56,7 +56,7 @@ public class SemanticRunnerService {
 
     }
 
-    public Deal extractAgreement(
+    public AgentResult<JsonNode> extractAgreement(
             byte[] pdfBytes)
             throws Exception {
 
@@ -64,26 +64,27 @@ public class SemanticRunnerService {
 
         String prompt = promptBuilder.buildExtractionPrompt();
 
-        String response = executeWithPdf(prompt, sessionId, pdfBytes);
+        ExecutionResult execution = executeWithPdf(prompt, sessionId, pdfBytes);
+        String response = execution.response();
 
         response = clean(response);
 
-        return objectMapper.readValue(
-                response,
-                Deal.class);
+        return new AgentResult<>(
+                readDeal(response),
+                execution.tokenUsage());
 
     }
 
     /** Runs a second-stage critic prompt through the configured ADK model. */
     public String runPrompt(String prompt) throws Exception {
-        return clean(execute(prompt, createSession()));
+        return clean(execute(prompt, createSession()).response());
     }
 
     /**
      * Re-reads the source document and reconciles the previously extracted deal, returning an
-     * updated {@link Deal} with corrected value / confidence / pageNumber / sourceText where needed.
+     * updated deal JSON with corrected value / confidence / pageNumber / sourceText where needed.
      */
-    public Deal reviewAgreement(
+    public AgentResult<JsonNode> reviewAgreement(
             byte[] pdfBytes,
             String currentDealJson,
             ValidationResult validationIssuesJson)
@@ -94,19 +95,30 @@ public class SemanticRunnerService {
         String prompt = promptBuilder.buildReviewPrompt(
                 currentDealJson, validationIssuesJson);
 
-        String response = clean(executeWithPdf(prompt, sessionId, pdfBytes));
+        ExecutionResult execution = executeWithPdf(prompt, sessionId, pdfBytes);
+        String response = clean(execution.response());
 
-        return objectMapper.readValue(response, Deal.class);
+        return new AgentResult<>(
+                readDeal(response),
+                execution.tokenUsage());
     }
 
-    private String execute(
+    private JsonNode readDeal(String response) throws Exception {
+        JsonNode deal = objectMapper.readTree(response);
+        if (deal == null || !deal.isObject()) {
+            throw new IllegalArgumentException("The extraction response must be a JSON object");
+        }
+        return deal;
+    }
+
+    private ExecutionResult execute(
             String prompt,
             String sessionId)
             throws Exception {
         return execute(sessionId, Part.builder().text(prompt).build());
     }
 
-    private String executeWithPdf(
+    private ExecutionResult executeWithPdf(
             String prompt,
             String sessionId,
             byte[] pdfBytes)
@@ -126,7 +138,7 @@ public class SemanticRunnerService {
         return execute(sessionId, promptPart, pdfPart);
     }
 
-    private String execute(
+    private ExecutionResult execute(
             String sessionId,
             Part... parts)
             throws Exception {
@@ -138,6 +150,7 @@ public class SemanticRunnerService {
                         .build();
 
         StringBuilder answer = new StringBuilder();
+        long tokenUsage = 0;
 
         Flowable<Event> events =
                 runner.runAsync(
@@ -147,6 +160,13 @@ public class SemanticRunnerService {
                         RunConfig.builder().build());
 
         for (Event event : events.blockingIterable()) {
+
+            tokenUsage += event.usageMetadata()
+                    .map(usage -> usage.totalTokenCount()
+                            .map(Integer::longValue)
+                            .orElseGet(() -> (long) usage.promptTokenCount().orElse(0)
+                                    + usage.candidatesTokenCount().orElse(0)))
+                    .orElse(0L);
 
             if (event.content().isPresent()) {
 
@@ -166,7 +186,7 @@ public class SemanticRunnerService {
 
         }
 
-        return answer.toString();
+        return new ExecutionResult(answer.toString(), tokenUsage);
 
     }
 
@@ -193,6 +213,12 @@ public class SemanticRunnerService {
         }
 
         return response.trim();
+    }
+
+    public record AgentResult<T>(T value, long tokenUsage) {
+    }
+
+    private record ExecutionResult(String response, long tokenUsage) {
     }
 
 }
